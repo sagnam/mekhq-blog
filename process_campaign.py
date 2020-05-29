@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 # ----------------------------------------------------------------------------
-# Basic parameters - change as needed 
+# Basic parameters - change as needed
 # ----------------------------------------------------------------------------
 
 #relative or absolute path to your mekhq directory including trailing /
-mekhq_path = "../mekhq-0.46.1/"
+mekhq_path = "/Users/donp/Downloads/mekhq-0.46.1/"
 
-#the name of your campaign file within the campaigns directory of your 
+#the name of your campaign file within the campaigns directory of your
 #mekhq directory
 campaign_file = 'Arts Campaign/Arts Campaign.cpnx'
 
@@ -17,7 +17,7 @@ campaign_file = 'Arts Campaign/Arts Campaign.cpnx'
 #roles = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,23,24,25]
 roles = [1]
 
-#role names for ALL roles in MekHQ by index number. You can change names, but 
+#role names for ALL roles in MekHQ by index number. You can change names, but
 #do not remove values, even if you do not use the role above
 role_names = ["Mechwarrior", "Aerospace Pilot", "Vehicle Driver", "Naval Vessel Driver", "VTOL Pilot", "Vehicle Gunner", "Battle Armor Infantry", "Conventional Infantry Soldier", "Protomech Pilot", "Conventional Fighter Pilot", "Space Vessel Pilot", "Space Vessel Crew", "Space Vessel Gunner", "Hyperspace Navigator", "Mech Tech", "Mechanic", "Aero Tech", "Battle Armor Tech", "Astech", "Doctor", "Medic", "Admin/Command", "Admin/Logistical", "Admin/Transport", "Admin/HR", "LAM Pilot", "Vehicle Crew"]
 
@@ -39,6 +39,11 @@ skill_level_names = ["Ultra-Green","Green","Regular","Veteran","Elite"]
 portrait_paths = {
     "default.gif": "default.gif"
 }
+
+force_paths = {
+}
+
+unit_logo_path = ''
 
 #skill type dictionary
 skill_dict = {
@@ -70,7 +75,7 @@ def urlify(s):
     s = re.sub(r"[^\w\s]", '', s)
     # Replace all runs of whitespace with a single dash
     s = re.sub(r"\s+", '-', s)
-    #slugs have trouble with numbers as the first letter, so add 
+    #slugs have trouble with numbers as the first letter, so add
     #a letter if this is the case
     if(s[0].isdigit()):
         s = "n" + s
@@ -112,6 +117,26 @@ def replace_portrait_name(portrait_file, slug):
     suffix = portrait_file.split('.')[1]
     return slug + '.' + suffix
 
+#read force pathway. Need to check for special cases
+def get_force_path(ele):
+    path = get_xml_text(ele)
+    if(path == '-- General --'):
+        return '';
+    else:
+        return path
+
+#read force file. Need to check for special cases
+def get_force_file(ele):
+    file_name = get_xml_text(ele)
+    if(file_name == 'None'):
+        return '';
+    else:
+        return file_name
+
+def replace_force_name(force_file, slug):
+    suffix = force_file.split('.')[1]
+    return slug + '.' + suffix
+
 #they switched over from int to enum for status
 #so need to consider both ways
 def get_person_status(status):
@@ -119,7 +144,7 @@ def get_person_status(status):
         return personnel_status_names[int(status)]
     else:
         return personnel_status_dict[status]
-    
+
 
 #loop through kills and count ones belonging to this uuid
 def count_kills(uuid, kills):
@@ -141,7 +166,7 @@ def get_unit_name(uuid, units):
             else:
                 return entity.attrib['chassis'] + ' ' + entity.attrib['model']
     return None
-  
+
 #loop through units and find the one assigned to a person by uuid
 def find_unit(uuid, units):
     for unit in units.findall('unit'):
@@ -157,6 +182,14 @@ def find_unit(uuid, units):
         for current_id in unit.findall('vesselCrewId'):
             if(current_id is not None and current_id.text is not None and current_id.text == uuid):
                 return unit.attrib['id']
+    return None
+
+#loop through personnel and find the one assigned to unit by name
+def find_person(uuid, personnel):
+    for person in personnel.findall('person'):
+        current_id = person.find('unitId')
+        if(current_id is not None and current_id.text is not None and current_id.text == uuid):
+            return person
     return None
 
 #loop through all the forces identified in element list and output them to
@@ -175,23 +208,37 @@ def process_forces(forces_ele, parent_name, parent_slug):
             full_force_name = ''
             slug = urlify(short_force_name)
         force_desc = get_xml_text(force.find('desc'))
+        force_file = get_force_file(force.find('iconFileName'))
+        force_path = get_force_path(force.find('iconCategory'))+force_file
         f = open('campaign/_forces/' + slug + '.md', 'w')
         f.write('---\n')
         f.write('layout: force\n')
         f.write('title: ' + short_force_name + '\n')
         f.write('order: ' + force.attrib['id'] + '\n')
         f.write('slug: ' + slug + '\n')
+
         if(parent_name is not None):
             f.write('parent-name: ' + parent_name + '\n')
             f.write('parent-slug: ' + parent_slug + '\n')
+
+        if(force_path is not '' and force_file is not ''):
+            new_force_file = replace_force_name(force_file, slug)
+            force_paths[new_force_file] = force_path
+            f.write('unit-icon: ' + new_force_file + '\n')
+
+            if(parent_name is None):
+                global unit_logo_path
+                unit_logo_path = force_path
+
         f.write('---\n\n')
         f.write(unescape(force_desc))
         f.close()
+
         subforces = force.find('subforces')
         if(subforces is not None):
             process_forces(subforces, full_force_name, slug)
 
-#loop through forces and find the force that the unit uuid is a member of, 
+#loop through forces and find the force that the unit uuid is a member of,
 #iteratively recursing through the subforces
 def find_force(uuid, forces_ele, parent_name, parent_slug):
     for force in forces_ele.findall('force'):
@@ -236,7 +283,7 @@ def find_rank(rank_level, rank_system, role):
         return None
     else:
         return rank
-    
+
 def check_rank(rank, rank_level, rank_list):
     if(rank == '--MW'):
         rank = rank_list[0][rank_level]
@@ -260,7 +307,7 @@ def process_rank_system(rsystem):
     rank_vee   = []
     rank_naval = []
     rank_inf   = []
-    rank_tech  = []    
+    rank_tech  = []
     for rank in rsystem.findall("rank"):
         rank_names = get_xml_text(rank.find('rankNames')).split(",")
         rank_mw.append(rank_names[0])
@@ -281,7 +328,7 @@ class SkillType:
         self.reg = reg
         self.vet = vet
         self.elite = elite
-    
+
     def get_target_desc(self, skill):
         if(self.count_up):
             value = self.target + skill.level + skill.bonus
@@ -289,7 +336,7 @@ class SkillType:
         else:
             value = self.target - (skill.level  + skill.bonus)
             return str(value) + '+'
-    
+
     def get_skill_level(self, level):
         if(level >= self.elite):
             return 4
@@ -301,7 +348,7 @@ class SkillType:
             return 1
         else:
             return 0
-            
+
 class Skill:
     def __init__(self, name, level, bonus):
         self.name = name
@@ -319,7 +366,7 @@ def get_skill_desc(sk1, sk2):
         tgt_desc = tgt_desc + "/" + skill_dict[sk2.name].get_target_desc(sk2)
         tgt_desc = re.sub(r"\+", '', tgt_desc)
     return [skill_level_names[lvl], tgt_desc]
-    
+
 def get_skill_report(person):
     role = int(person.find('primaryRole').text)
     skills = {}
@@ -413,20 +460,28 @@ def get_skill_report(person):
 files = glob.glob('campaign/_forces/*')
 for f in files:
     os.remove(f)
-    
+
 files = glob.glob('campaign/_missions/*')
 for f in files:
     os.remove(f)
-    
+
 files = glob.glob('campaign/_personnel/*')
 for f in files:
     os.remove(f)
-    
+
 files = glob.glob('campaign/_scenarios/*')
 for f in files:
     os.remove(f)
-    
+
+files = glob.glob('campaign/_tro/*')
+for f in files:
+    os.remove(f)
+
 files = glob.glob('assets/images/portraits/*')
+for f in files:
+    os.remove(f)
+
+files = glob.glob('assets/images/force/*')
 for f in files:
     os.remove(f)
 
@@ -437,7 +492,7 @@ for f in files:
 tree = ET.parse(mekhq_path + 'campaigns/' + campaign_file)
 campaign = tree.getroot()
 
-#stuff we need 
+#stuff we need
 campaign_info = campaign.find('info')
 date = datetime.datetime.strptime(campaign_info.find('calendar').text, '%Y-%m-%d %H:%M:%S')
 kills = campaign.find('kills')
@@ -455,7 +510,7 @@ customs = campaign.findall('custom')
 rank_tree = ET.parse(mekhq_path + 'data/universe/ranks.xml')
 rank_systems = rank_tree.getroot()
 all_rank_lists = []
-for rank_system in rank_systems.findall('rankSystem'):        
+for rank_system in rank_systems.findall('rankSystem'):
     all_rank_lists.append(process_rank_system(rank_system))
 
 #now check for a custom rank system to append
@@ -581,16 +636,56 @@ for person in personnel.findall('person'):
 for unit in units.findall('unit'):
     entity = unit.find('entity')
     name = entity.attrib.get('chassis') + ' ' + entity.attrib.get('model')
+    salvage = unit.find('salvaged').text
+    f = open('campaign/_tro/' + urlify(name) + '.md', 'w')
+    f.write('---\n')
+    f.write('layout: unit\n')
+    f.write('name: ' + name + '\n')
+    f.write('slug: ' + urlify(name) + '\n')
+    f.write('salvage: ' + salvage + '\n')
+    unit_id = unit.attrib.get('id')
+    if(unit_id is not None):
+        pilot = find_person(unit_id, personnel)
+        if(pilot is not None):
+            first = get_xml_text(pilot.find('givenName'))
+            surname = get_xml_text(pilot.find('surname'))
+            bloodname = get_xml_text(pilot.find('bloodname'))
+            pilot_name = get_xml_text(pilot.find('name'))
+            if(pilot_name == ''):
+                pilot_name = first
+                if(surname != ''):
+                    pilot_name = pilot_name + ' ' + surname
+            if(bloodname != ''):
+                pilot_name = pilot_name + ' ' + bloodname
+            if(pilot_name is not None):
+                f.write('person: ' + pilot_name + '\n')
+                f.write('person-slug: ' + urlify(pilot_name) + '\n')
+
+    force_name = find_force(unit_id, forces, None, None)
+    if(force_name is not None):
+        f.write('force: ' + force_name + '\n')
+        f.write('force-slug: ' + urlify(force_name) + '\n')
+
+    f.write('---\n')
+    content = ['No TRO available']
     for custom in customs:
         if(custom.find('name').text == name):
-            f = open('campaign/_tro/' + urlify(name) + '.md', 'w')
-            f.write('---\n')
-            f.write('slug: ' + urlify(name) + '\n')
-            f.write('---\n')
-            content = ET.fromstring(custom.find('mtf').text).text
-            f.write(results)
-            f.close()
+            mtf = custom.find('mtf').text
+            fix = '<root>{}</root>'.format(mtf)
+            raw_content = ET.fromstring(fix).text.split('\n')
+            content = ['<p>']
+            for line in raw_content:
+                if (':' in line):
+                    content += ['<b>' + line.replace(':', ':</b> ') + '<br/>\n']
+                else:
+                    content += [line  + '<br/>\n']
+            content += ['</p>']
+
             break
+    for line in content:
+        f.write(line)
+    f.close()
+
 
 #loop through missions and scenarios. Use slugs to link scenarios
 #to mission, but actually linking will be done by liquid
@@ -659,5 +754,20 @@ for portrait_name in portrait_paths:
     portrait_path = portrait_paths[portrait_name]
     try:
         copyfile(mekhq_path + 'data/images/portraits/' + portrait_path, 'assets/images/portraits/' + portrait_name)
+    except:
+        pass
+
+#copy over images
+for force_name in force_paths:
+    force_path = force_paths[force_name]
+    try:
+        copyfile(mekhq_path + 'data/images/force/' + force_path, 'assets/images/force/' + force_name)
+    except:
+        pass
+
+#copy over unit logo
+if(unit_logo_path is not ''):
+    try:
+        copyfile(mekhq_path + 'data/images/force/' + unit_logo_path, 'assets/images/unit_logo.jpg')
     except:
         pass

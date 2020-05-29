@@ -1,0 +1,12 @@
+{% include header.html %}
+  <main role="main">
+    <div class="container top bg-light mt-3">
+      {% if page.person %}
+        <strong>Pilot: </<strong><a href="/personnel/{{ page.person-slug }}">{{ page.person }}</a><br>
+      {% endif %}
+      <br>
+      {{content}}
+  </main>
+{% include footer.html %}
+</body>
+</html>

@@ -5,6 +5,9 @@
       <div class="card">
         <div class="card-header bg-primary" id="{{subforce.slug}}-header">
           <h2 class="mb-0">
+            {% if subforce.unit-icon %}
+              <img class="img-fluid img-thumbnail float-left rounded mr-2" style="width:75px" src="/assets/images/force/{{ subforce.unit-icon }}">
+            {% endif %}
             <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#{{ subforce.slug }}" aria-expanded="true" aria-controls="{{ subforce.slug }}">
               {{ subforce.title }}
             </button>
