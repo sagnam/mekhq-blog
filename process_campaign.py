@@ -5,16 +5,17 @@
 # ----------------------------------------------------------------------------
 
 #relative or absolute path to your mekhq directory including trailing /
-mekhq_path = "../../Programs/mekhq-0.47.6/"
+mekhq_path = "../mekhq-0.46.1/"
 
 #the name of your campaign file within the campaigns directory of your 
 #mekhq directory
-campaign_file = 'The Free Company of Oriente30571217.cpnx'
+campaign_file = 'Arts Campaign/Arts Campaign.cpnx'
 
 #change this to choose which personnel get loaded based on personnel types
 #in mekhq
 #https://github.com/MegaMek/mekhq/blob/master/MekHQ/src/mekhq/campaign/personnel/Person.java#L75
-roles = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,23,24,25]
+#roles = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,23,24,25]
+roles = [1]
 
 #role names for ALL roles in MekHQ by index number. You can change names, but 
 #do not remove values, even if you do not use the role above
@@ -445,6 +446,7 @@ personnel = campaign.find('personnel')
 missions = campaign.find('missions')
 forces = campaign.find('forces')
 units = campaign.find('units')
+customs = campaign.findall('custom')
 
 # ----------------------------------------------------------------------------
 # Process default and custom rank structure and skill types for later use
@@ -574,7 +576,22 @@ for person in personnel.findall('person'):
         f.write('---\n\n')
         f.write(unescape(bio))
         f.close()
-  
+
+#loop through units and print out markdown file for each one
+for unit in units.findall('unit'):
+    entity = unit.find('entity')
+    name = entity.attrib.get('chassis') + ' ' + entity.attrib.get('model')
+    for custom in customs:
+        if(custom.find('name').text == name):
+            f = open('campaign/_tro/' + urlify(name) + '.md', 'w')
+            f.write('---\n')
+            f.write('slug: ' + urlify(name) + '\n')
+            f.write('---\n')
+            content = ET.fromstring(custom.find('mtf').text).text
+            f.write(results)
+            f.close()
+            break
+
 #loop through missions and scenarios. Use slugs to link scenarios
 #to mission, but actually linking will be done by liquid
 for mission in missions.findall('mission'):
