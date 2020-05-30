@@ -14,7 +14,7 @@
             {% for pslug in page.personnel %}
               {% for person in site.personnel %}
                 {% if person.slug == pslug %}
-                  <li> <a href="{{ person.url }}">{{ person.name }}</a>
+                  <li> <a href="{{ person.url | relative_url }}">{{ person.name }}</a>
                 {% endif %}
               {% endfor %}
             {% endfor %}
@@ -26,7 +26,7 @@
             {% for mslug in page.mission %}
               {% for mission in site.missions %}
                 {% if mission.slug == mslug %}
-                  <li> <a href="{{ mission.url }}">{{ mission.title }}</a>
+                  <li> <a href="{{ mission.url | relative_url }}">{{ mission.title }}</a>
                 {% endif %}
               {% endfor %}
             {% endfor %}

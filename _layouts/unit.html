@@ -2,7 +2,10 @@
   <main role="main">
     <div class="container top bg-light mt-3">
       {% if page.person %}
-        <strong>Pilot: </<strong><a href="/personnel/{{ page.person-slug }}">{{ page.person }}</a><br>
+        <strong>Pilot: </<strong><a href="{{ site.baseurl }}personnel/{{ page.person-slug }}">{{ page.person }}</a><br>
+      {% endif %}
+      {% if page.force %}
+        <strong>Force: </<strong><a href="{{ site.baseurl }}forces/{{ page.force-slug }}">{{ page.force }}</a><br>
       {% endif %}
       <br>
       {{content}}

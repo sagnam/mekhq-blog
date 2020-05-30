@@ -12,7 +12,7 @@ html {
 
 
 body {
-  background-image: url("../../assets/images/dark_camo.png"); 
+  background-image: url("../assets/images/dark_camo.png");
   padding-top: 50px;
 }
 
@@ -20,7 +20,7 @@ body {
 /* For the banner image used at the top                */
 /*******************************************************/
 .banner-image {
-  background-image: url("../../assets/images/banner_image.png");
+  background-image: url("../assets/images/banner_image.png");
 
   /* Set a specific height */
   height: 300px;
@@ -80,8 +80,8 @@ $navbar-dark-active-color:lighten($secondary,15%);
 
   @include hover-focus {
     color: $secondary;
-  }  
-}  
+  }
+}
 
 @import 'bootstrap/bootstrap';
 

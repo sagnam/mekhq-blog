@@ -6,7 +6,7 @@
         <div class="card-header bg-primary" id="{{subforce.slug}}-header">
           <h2 class="mb-0">
             {% if subforce.unit-icon %}
-              <img class="img-fluid img-thumbnail float-left rounded mr-2" style="width:75px" src="/assets/images/force/{{ subforce.unit-icon }}">
+              <img class="img-fluid img-thumbnail float-left rounded mr-2" style="width:75px" src="{{ site.baseurl }}assets/images/force/{{ subforce.unit-icon }}">
             {% endif %}
             <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#{{ subforce.slug }}" aria-expanded="true" aria-controls="{{ subforce.slug }}">
               {{ subforce.title }}
@@ -34,17 +34,17 @@
           <div class="row">
             <div class="col">
               {% if person.portrait %}
-                <img class="img-fluid img-thumbnail float-left rounded mr-2" style="width:75px" src="/assets/images/portraits/{{ person.portrait }}">
+                <img class="img-fluid img-thumbnail float-left rounded mr-2" style="width:75px" src="{{ site.baseurl }}assets/images/portraits/{{ person.portrait }}">
               {% else %}
-                <img class="img-fluid float-left rounded mr-2" style="width:75px" src="/assets/images/portraits/default.gif">
+                <img class="img-fluid float-left rounded mr-2" style="width:75px" src="{{ site.baseurl }}assets/images/portraits/default.gif">
               {% endif %}
               {%if person.unit %}
                 {% assign custom=nil %}
                 {% include find-custom.html custom-slug=person.unit-slug %}
                 {% if custom %}
-                  <a href="{{ person.url }}">{{person.title}}</a>, <a href="/tro/{{ custom }}">{{person.unit}}</a>
+                  <a href="{{ person.url | relative_url }}">{{person.title}}</a>, <a href="{{ site.baseurl }}tro/{{ custom }}">{{person.unit}}</a>
                 {% else %}
-                  <a href="{{ person.url }}">{{person.title}}</a>, {{person.unit}}
+                  <a href="{{ person.url | relative_url }}">{{person.title}}</a>, {{person.unit}}
                 {% endif %}
               {% endif %}
             </div>

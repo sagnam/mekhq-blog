@@ -7,35 +7,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="{{ site.description }}" />
   <meta name="author" content="{{ site.author }}" />
-  
+
   <!-- social media meta info -->
   <meta property="og:site_name" content="{{ site.title }}">
   <meta property="og:title" content="{{ site.title }} - {{ page.title }}">
   <meta property="og:description" content="{{ site.description }}">
   {% if page.portrait %}
-    <meta property="og:image" content="{{ /assets/images/portraits/{{ page.portrait }} | absolute_url }}">
+    <meta property="og:image" content="assets/images/portraits/{{ page.portrait }}">
   {% elsif site.logo %}
-    <meta property="og:image" content="{{ site.logo | absolute_url }}">
+    <meta property="og:image" content="{{ site.logo | relative_url }}">
   {% endif %}
   <meta property="og:url" content="{{ page.url | absolute_url }}">
   <meta name="twitter:card" content="summary_large_image">
-  
+
   {% if site.logo %}
-    <link rel="icon" href="{{ site.logo }}" type="image/x-icon">
+    <link rel="icon" href="{{ site.logo | relative_url }}" type="image/x-icon">
   {% endif %}
 
    <!--
    Reading in local version for customization
    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">-->
-   
+
    <link href="{{ '/css/site.css' | relative_url }}" rel="stylesheet">
-  
+
 </head>
 
 <body>
   <header>
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-primary">
-      <a class="navbar-brand" href="/index.html">{{ site.title }}</a>
+      <a class="navbar-brand" href="{{ site.baseurl }}index.html">{{ site.title }}</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>

@@ -8,13 +8,13 @@
             <div class="row pb-3">
               <div class="col-md-2">
                 {% if person.portrait %}
-                  <img class="img-fluid rounded" src="assets/images/portraits/{{ person.portrait }}">
+                  <img class="img-fluid rounded" src="{{ site.baseurl }}assets/images/portraits/{{ person.portrait }}">
                 {% else %}
-                  <img class="img-fluid rounded" src="assets/images/portraits/default.gif" style="width:200px">
+                  <img class="img-fluid rounded" src="{{ site.baseurl }}assets/images/portraits/default.gif" style="width:200px">
                 {% endif %}
               </div>
               <div class="col-md-10 pt-1">
-                <h4><a href="{{ person.url }}">{{ person.title }}</a></h4>
+                <h4><a href="{{ person.url | relative_url }}">{{ person.title }}</a></h4>
                 {% if person.skill-level %}{{ person.skill-level }} {% endif %}{% if person.phenotype %} {{ person.phenotype }} {% endif%}{{ person.role-name }}{% if person.skill-detail %} ({{ person.skill-detail }}){% endif %}<br>
                 {% if person.callsign %}
                   <strong>Callsign: </strong>{{person.callsign}}<br>
@@ -23,13 +23,13 @@
                   {% assign custom=nil %}
                   {% include find-custom.html custom-slug=person.unit-slug %}
                   {% if custom %}
-                    <strong>Vehicle: </strong><a href="tro/{{ custom }}">{{person.unit}}</a><br>
+                    <strong>Vehicle: </strong><a href="{{ site.baseurl }}tro/{{ custom }}">{{person.unit}}</a><br>
                   {% else %}
                     <strong>Vehicle: </strong>{{person.unit}}<br>
                   {% endif %}
                 {% endif %}
                 {% if person.force %}
-                  <strong>Unit: </strong><a href="forces/{{ person.force-slug }}">{{person.force}}</a><br>
+                  <strong>Unit: </strong><a href="{{ site.baseurl }}forces/{{ person.force-slug }}">{{person.force}}</a><br>
                 {% endif %}
               </div>
             </div>

@@ -3,11 +3,11 @@ layout: default
 title: Home
 permalink: /index.html
 ---
- 
+
 {% if site.logo %}
-  <img src="{{ site.logo }}" class="float-left w-25 mr-2 mb-2">
+  <img src="{{ site.baseurl }}{{ site.logo }}" class="float-left w-25 mr-2 mb-2">
 {% endif %}
- 
+
  {% if site.toe_front_page %}
   {% for force in site.forces %}
     {% if force.parent-slug == nil %}

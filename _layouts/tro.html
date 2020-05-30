@@ -9,15 +9,15 @@
             {% if unit.salvage %}
               <strike>
             {% endif %}
-            <h3><a class="title" href="{{ unit.url }}">{{ unit.name }}</a></h3>
+            <h3><a class="title" href="{{ site.baseurl }}tro/{{ unit.slug }}">{{ unit.name }}</a></h3>
             {% if unit.salvage %}
               </strike>
             {% endif %}
               {% if unit.person %}
-                <strong>Pilot: </<strong><a href="personnel/{{ unit.person-slug }}">{{ unit.person }}</a><br>
+                <strong>Pilot: </<strong><a href="{{ site.baseurl }}personnel/{{ unit.person-slug }}">{{ unit.person }}</a><br>
               {% endif %}
               {% if unit.force %}
-                <strong>Unit: </<strong><a href="toe/{{ unit.force-slug }}">{{ unit.force }}</a><br>
+                <strong>Unit: </<strong><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
               {% endif %}
             <hr>
           </div>
