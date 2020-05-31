@@ -756,21 +756,22 @@ for unit in units.findall('unit'):
     if (not isCustom):
         mechInfo = mech_paths[name]
         if (mechInfo is not None):
-            if (tarfile.is_tarfile(mekhq_path + '' + mechInfo[0])):
-                tarFile = tarfile.open(mekhq_path + '' + mechInfo[0])
+            mechFilePath = mekhq_path + mechInfo[0]
+            if (tarfile.is_tarfile(mechFilePath)):
+                tarFile = tarfile.open(mechFilePath)
                 mechTarFile = tarFile.getmember(mechInfo[1])
                 reader = tarFile.extractfile(mechTarFile)
                 raw_content = reader.read().decode("utf-8")
                 content = processMechFile(f, name, raw_content)
 
-            elif zipfile.is_zipfile(mekhq_path + '' + mechInfo[0]):
-                zipFile = zipfile.ZipFile(mekhq_path + '' + mechInfo[0])
+            elif zipfile.is_zipfile(mechFilePath):
+                zipFile = zipfile.ZipFile(mechFilePath)
                 mechZipFile = zipFile.open(mechInfo[1])
                 raw_content = mechZipFile.read().decode("utf-8")
                 content = processMechFile(f, name, raw_content)
             else:
-                mechFile = open(mechInfo[0], 'r')
-                raw_content = mechFile.read().decode("utf-8")
+                mechFile = open(mechFilePath, 'r')
+                raw_content = mechFile.read()
                 content = processMechFile(f, name, raw_content)
 
     f.close()

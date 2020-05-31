@@ -40,6 +40,13 @@ body {
   border-radius: 25px;
 }
 
+@media only screen and (max-width: 768px) {
+  /* For mobile phones: */
+    .container {
+      overflow-x: scroll;
+    }
+}
+
 /*******************************************/
 /** Custom colors and font                **/
 /*******************************************/
