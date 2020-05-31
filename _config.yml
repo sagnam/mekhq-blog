@@ -50,6 +50,8 @@ collections:
     output: true
   parts:
     output: true
+  finances:
+    output: true
 
 sass:
   sass_dir: css

@@ -1,6 +1,9 @@
 {% include header.html %}
   <main role="main">
     <div class="container top bg-light mt-3">
+      {% if page.funds %}
+        <h3><strong>Funds: </strong>{{ page.funds }}</h3><br>
+      {% endif %}
       {{content}}
     </div>
   </main>

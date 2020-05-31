@@ -12,7 +12,7 @@ html {
 
 
 body {
-  background-image: url("../assets/images/dark_camo.png");
+  background-image: url("../assets/images/dark_blue_camo.jpg");
   padding-top: 50px;
 }
 
@@ -70,10 +70,10 @@ $link-color: $info;
 $link-hover-color:darken($link-color,20%);
 $navbar-light-color: $secondary;
 $navbar-light-hover-color:$gray-800;
-$navbar-light-active-color:lighten($secondary,15%);
+$navbar-light-active-color:lighten($secondary,35%);
 $navbar-dark-color: $secondary;
 $navbar-dark-hover-color:$gray-200;
-$navbar-dark-active-color:lighten($secondary,15%);
+$navbar-dark-active-color:lighten($secondary,35%);
 
 // links in TO&E should be different color
 @import "bootstrap/utilities";
@@ -97,23 +97,25 @@ $navbar-dark-active-color:lighten($secondary,15%);
   border-width: 3px !important;
 }
 
-.warehouse {
+.sorttable {
   border-spacing: 0;
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
-.warehouse th, .warehouse td {
+.sorttable th, .sorttable td {
   text-align: left;
   padding: 4px 16px;
   border: 1px solid black;
   border-spacing: 0;
 }
 
-.warehouse tr td:nth-child(n+2), .warehouse tr th:nth-child(n+2) {
+.sorttable tr td:nth-child(n+2), .sorttable tr th:nth-child(n+2) {
   text-align: center;
+  white-space:nowrap;
 }
 
-.warehouse tr:nth-child(even) {
+.sorttable tr:nth-child(even) {
   background-color: #f2f2f2
 }

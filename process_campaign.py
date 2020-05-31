@@ -481,6 +481,10 @@ files = glob.glob('campaign/_parts/*')
 for f in files:
     os.remove(f)
 
+files = glob.glob('campaign/_finances/*')
+for f in files:
+    os.remove(f)
+
 files = glob.glob('assets/images/portraits/*')
 for f in files:
     os.remove(f)
@@ -507,6 +511,7 @@ forces = campaign.find('forces')
 units = campaign.find('units')
 customs = campaign.findall('custom')
 parts = campaign.find('parts')
+finances = campaign.find('finances')
 
 # ----------------------------------------------------------------------------
 # Process default and custom rank structure and skill types for later use
@@ -706,7 +711,7 @@ f = open('campaign/_parts/parts.md', 'w')
 f.write('---\n')
 f.write('layout: parts\n')
 f.write('---\n\n')
-f.write('<table class="warehouse">\n')
+f.write('<table class="sorttable">\n')
 f.write('\t<tr>\n')
 f.write('\t\t<th>Name</th>\n')
 f.write('\t\t<th>Type</th>\n')
@@ -837,6 +842,40 @@ for mission in missions.findall('mission'):
                 f.write('\n##### After-Action Report\n\n')
                 f.write(scenario_aar)
             f.close()
+
+#loop through transations and print out markdown file for all
+content = ['<table class="sorttable">\n']
+content += ['\t<tr>\n']
+content += ['\t\t<th>Description</th>\n']
+content += ['\t\t<th>Amount</th>\n']
+content += ['\t\t<th>Date</th>\n']
+content += ['\t</tr>\n']
+
+funds = 0
+for transation in finances.findall('transaction'):
+    description = transation.find('description')
+    amountStr = transation.find('amount')
+    date = transation.find('date')
+    amount = int(amountStr.text.split()[0])
+    funds += amount
+    content += ['\t<tr>\n']
+    content += ['\t\t<td>' + description.text + '</td>\n']
+    content += ['\t\t<td>' + f'{amount:,}' + '</td>\n']
+    content += ['\t\t<td>' + date.text + '</td>\n']
+    content += ['\t</tr>\n']
+
+content += ['</table>\n']
+
+f = open('campaign/_finances/finances.md', 'w')
+
+f.write('---\n')
+f.write('layout: finances\n')
+f.write('funds: ' + f'{funds:,}' + ' CBills\n')
+f.write('---\n\n')
+for line in content:
+    f.write(line)
+f.close()
+
 
 # ----------------------------------------------------------------------------
 # Copy over data from MekHQ
