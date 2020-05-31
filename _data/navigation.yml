@@ -6,8 +6,6 @@
   url: /missions.html
 - title: TO&E
   url: /toe.html
-- title: Hangar
-  url: /tro.html
 - title: Personnel
   url: /personnel.html
   sublinks:
@@ -35,3 +33,7 @@
     - title: separator
     - title: Rolls of Honor
       url: /rolls-honor.html
+- title: Hangar
+  url: /tro.html
+- title: Warehouse
+  url: parts/parts.html

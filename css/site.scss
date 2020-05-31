@@ -12,7 +12,7 @@ html {
 
 
 body {
-  background-image: url("../assets/images/dark_blue_camo.jpg");
+  background-image: url("../assets/images/dark_camo.png");
   padding-top: 50px;
 }
 
@@ -51,13 +51,15 @@ $headings-font-family:Comfortaa;
 $font-family-base:Comfortaa;
 
 $primary:#303030;
-$secondary:#FF550B;
+$secondary:#0F81C7;
 $success:#015668;
 $danger:#FF304F;
 $info:#0F81C7;
 $warning:#0DE2EA;
 $light:#e8e8e8;
 $dark:#000000;
+
+// Add SASS theme customizations here..
 
 /*! Import Bootstrap 4 variables */
 @import "bootstrap/functions";
@@ -93,4 +95,25 @@ $navbar-dark-active-color:lighten($secondary,15%);
   //margin-top: 5px;
   //margin-bottom: 15px;
   border-width: 3px !important;
+}
+
+.warehouse {
+  border-spacing: 0;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.warehouse th, .warehouse td {
+  text-align: left;
+  padding: 4px 16px;
+  border: 1px solid black;
+  border-spacing: 0;
+}
+
+.warehouse tr td:nth-child(n+2), .warehouse tr th:nth-child(n+2) {
+  text-align: center;
+}
+
+.warehouse tr:nth-child(even) {
+  background-color: #f2f2f2
 }

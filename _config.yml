@@ -19,7 +19,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   The awesomest mercenary force every assembled in the Inner Sphere. Maybe even the Outer Sphere!
 baseurl: "/~sagnam/battletech/" # the subpath of your site, e.g. /blog
 url: "http://www.izzy.net" # the base hostname & protocol for your site, e.g. http://example.com
-banner_image: true
+banner_image: false
 logo: /assets/images/unit_logo.jpg
 
 # By default, the description in the top-level force will be placed on the home
@@ -47,6 +47,8 @@ collections:
   forces:
     output: true
   tro:
+    output: true
+  parts:
     output: true
 
 sass:

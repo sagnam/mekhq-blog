@@ -477,6 +477,10 @@ files = glob.glob('campaign/_tro/*')
 for f in files:
     os.remove(f)
 
+files = glob.glob('campaign/_parts/*')
+for f in files:
+    os.remove(f)
+
 files = glob.glob('assets/images/portraits/*')
 for f in files:
     os.remove(f)
@@ -502,6 +506,7 @@ missions = campaign.find('missions')
 forces = campaign.find('forces')
 units = campaign.find('units')
 customs = campaign.findall('custom')
+parts = campaign.find('parts')
 
 # ----------------------------------------------------------------------------
 # Process default and custom rank structure and skill types for later use
@@ -635,7 +640,13 @@ for person in personnel.findall('person'):
 #loop through units and print out markdown file for each one
 for unit in units.findall('unit'):
     entity = unit.find('entity')
-    name = entity.attrib.get('chassis') + ' ' + entity.attrib.get('model')
+    refit = unit.find('refit')
+    if (refit is not None):
+        refitEntity = refit.find('entity')
+        name = refitEntity.attrib.get('chassis') + ' ' + refitEntity.attrib.get('model')
+    else:
+        name = entity.attrib.get('chassis') + ' ' + entity.attrib.get('model')
+
     salvage = unit.find('salvaged').text
     f = open('campaign/_tro/' + urlify(name) + '.md', 'w')
     f.write('---\n')
@@ -643,6 +654,9 @@ for unit in units.findall('unit'):
     f.write('name: ' + name + '\n')
     f.write('slug: ' + urlify(name) + '\n')
     f.write('salvage: ' + salvage + '\n')
+    if (refit is not None):
+        f.write('refit: true\n')
+
     unit_id = unit.attrib.get('id')
     if(unit_id is not None):
         pilot = find_person(unit_id, personnel)
@@ -685,6 +699,85 @@ for unit in units.findall('unit'):
     for line in content:
         f.write(line)
     f.close()
+
+
+#loop through parts and print out markdown file for all
+f = open('campaign/_parts/parts.md', 'w')
+f.write('---\n')
+f.write('layout: parts\n')
+f.write('---\n\n')
+f.write('<table class="warehouse">\n')
+f.write('\t<tr>\n')
+f.write('\t\t<th>Name</th>\n')
+f.write('\t\t<th>Type</th>\n')
+f.write('\t\t<th>Quantity</th>\n')
+f.write('\t\t<th>Weight</th>\n')
+f.write('\t\t<th>Detail</th>\n')
+f.write('\t\t<th>Status</th>\n')
+f.write('\t</tr>\n')
+
+for part in parts.findall('part'):
+    type = part.attrib.get('type')
+    name = part.find('name')
+    amount = part.find('amount')
+    weight = part.find('equipTonnage')
+    unitId = part.find('unitId')
+    typeName = part.find('typeName')
+    clan = part.find('clan')
+    forWeight = part.find('unitTonnage')
+    reserved = part.find('refitId')
+    damaged = part.find('hits')
+    munition = part.find('munition')
+    shots = part.find('shots')
+
+    # for some reason there is a bunch of battle armor armor in the campaign
+    # file but not in the warehouse
+    if(unitId is None and name is not None and type != 'mekhq.campaign.parts.BaArmor'):
+        f.write('\t<tr>\n')
+        f.write('\t\t<td>' + name.text + '</td>\n')
+
+        if ((clan is not None) and (clan.text == 'true')) or ((typeName is not None) and (typeName.text.startswith('CL'))):
+            f.write('\t\t<td>Clan</td>\n')
+        else:
+            f.write('\t\t<td>IS</td>\n')
+
+        if (amount is not None):
+            f.write('\t\t<td>' + amount.text + '</td>\n')
+        elif (munition is not None and shots is not None):
+            f.write('\t\t<td>' + shots.text + '</td>\n')
+        else:
+            f.write('\t\t<td>1</td>\n')
+
+        if (weight is not None):
+            f.write('\t\t<td>' + str(round(float(weight.text),1)) + '</td>\n')
+        elif (munition is not None and forWeight is not None):
+            f.write('\t\t<td>' + forWeight.text + '</td>\n')
+            forWeight = None
+        else:
+            f.write('\t\t<td></td>\n')
+
+        if (((type == 'mekhq.campaign.parts.MekLocation') or
+            (type == 'mekhq.campaign.parts.equipment.JumpJet') or
+            (type == 'mekhq.campaign.parts.MekSensor') or
+            (type == 'mekhq.campaign.parts.MekActuator') or
+            (type == 'mekhq.campaign.parts.EnginePart')) and
+            (forWeight is not None)):
+            f.write('\t\t<td>' + forWeight.text + ' tons</td>\n')
+        else:
+            f.write('\t\t<td></td>\n')
+
+        if (reserved is not None and reserved.text != 'null'):
+            f.write('\t\t<td>reserved</td>\n')
+        elif (damaged is not None and damaged.text != '0'):
+            f.write('\t\t<td>damaged</td>\n')
+        else:
+            f.write('\t\t<td></td>\n')
+
+
+        f.write('\t</tr>\n')
+
+f.write('</table>\n')
+f.close()
 
 
 #loop through missions and scenarios. Use slugs to link scenarios
