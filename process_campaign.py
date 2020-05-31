@@ -49,6 +49,12 @@ unit_logo_path = ''
 skill_dict = {
 }
 
+mech_paths = {
+}
+
+fluff_paths = {
+}
+
 # ----------------------------------------------------------------------------
 # imports
 # ----------------------------------------------------------------------------
@@ -61,7 +67,33 @@ from html import unescape
 import os
 import glob
 from shutil import copyfile
+import javaobj.v2 as javaobj
+import zipfile
+import tarfile
 
+with open(mekhq_path + '/data/mechfiles/units.cache', 'rb') as fd:
+    jobj = fd.read()
+
+pobjs = javaobj.loads(jobj)
+
+for pobj in pobjs[1:]:
+    if (pobj.m_sChassis is not None):
+        unit = pobj.m_sChassis.value
+
+        if (pobj.m_sModel is not None):
+            unit += ' ' + pobj.m_sModel.value
+
+        if (pobj.m_sSourceFile is not None):
+            file = pobj.m_sSourceFile.path.value
+        else:
+            file = ''
+
+        if (pobj.m_sEntryName is not None):
+            zipEntry = pobj.m_sEntryName.value
+        else:
+            zipEntry = ''
+
+        mech_paths[unit] = [file, zipEntry]
 
 # ----------------------------------------------------------------------------
 # custom functions
@@ -135,6 +167,11 @@ def get_force_file(ele):
 
 def replace_force_name(force_file, slug):
     suffix = force_file.split('.')[1]
+    return slug + '.' + suffix
+
+#read force file. Need to check for special cases
+def replace_fluff_name(fluff_file, slug):
+    suffix = fluff_file.rsplit('.', 1)[1]
     return slug + '.' + suffix
 
 #they switched over from int to enum for status
@@ -642,6 +679,26 @@ for person in personnel.findall('person'):
         f.write(unescape(bio))
         f.close()
 
+def processMechFile(f, name, raw_content):
+    content = ['<p>']
+    for line in raw_content.split('\n'):
+        if (':' in line):
+            if (line.startswith('imagefile:')):
+                fluff_file = line.split(':')[1]
+                new_fluff_file = replace_fluff_name(fluff_file, urlify(name))
+                fluff_paths[new_fluff_file] = fluff_file
+                f.write('fluff: ' + new_fluff_file + '\n')
+            else:
+                content += ['<b>' + line.replace(':', ':</b> ') + '<br/>\n']
+        else:
+            content += [line  + '<br/>\n']
+    content += ['</p>']
+
+    f.write('---\n')
+    for line in content:
+        f.write(line)
+    return content
+
 #loop through units and print out markdown file for each one
 for unit in units.findall('unit'):
     entity = unit.find('entity')
@@ -685,26 +742,38 @@ for unit in units.findall('unit'):
         f.write('force: ' + force_name + '\n')
         f.write('force-slug: ' + urlify(force_name) + '\n')
 
-    f.write('---\n')
     content = ['No TRO available']
+    isCustom = False
     for custom in customs:
         if(custom.find('name').text == name):
+            isCustom = True
             mtf = custom.find('mtf').text
             fix = '<root>{}</root>'.format(mtf)
-            raw_content = ET.fromstring(fix).text.split('\n')
-            content = ['<p>']
-            for line in raw_content:
-                if (':' in line):
-                    content += ['<b>' + line.replace(':', ':</b> ') + '<br/>\n']
-                else:
-                    content += [line  + '<br/>\n']
-            content += ['</p>']
-
+            raw_content = ET.fromstring(fix).text
+            content = processMechFile(f, name, raw_content)
             break
-    for line in content:
-        f.write(line)
-    f.close()
 
+    if (not isCustom):
+        mechInfo = mech_paths[name]
+        if (mechInfo is not None):
+            if (tarfile.is_tarfile(mekhq_path + '' + mechInfo[0])):
+                tarFile = tarfile.open(mekhq_path + '' + mechInfo[0])
+                mechTarFile = tarFile.getmember(mechInfo[1])
+                reader = tarFile.extractfile(mechTarFile)
+                raw_content = reader.read().decode("utf-8")
+                content = processMechFile(f, name, raw_content)
+
+            elif zipfile.is_zipfile(mekhq_path + '' + mechInfo[0]):
+                zipFile = zipfile.ZipFile(mekhq_path + '' + mechInfo[0])
+                mechZipFile = zipFile.open(mechInfo[1])
+                raw_content = mechZipFile.read().decode("utf-8")
+                content = processMechFile(f, name, raw_content)
+            else:
+                mechFile = open(mechInfo[0], 'r')
+                raw_content = mechFile.read().decode("utf-8")
+                content = processMechFile(f, name, raw_content)
+
+    f.close()
 
 #loop through parts and print out markdown file for all
 f = open('campaign/_parts/parts.md', 'w')
@@ -755,7 +824,8 @@ for part in parts.findall('part'):
 
         if (weight is not None):
             f.write('\t\t<td>' + str(round(float(weight.text),1)) + '</td>\n')
-        elif (munition is not None and forWeight is not None):
+        elif (munition is not None and forWeight is not None and
+                (type != 'mekhq.campaign.parts.equipment.AmmoBin')):
             f.write('\t\t<td>' + forWeight.text + '</td>\n')
             forWeight = None
         else:
@@ -901,5 +971,29 @@ for force_name in force_paths:
 if(unit_logo_path is not ''):
     try:
         copyfile(mekhq_path + 'data/images/force/' + unit_logo_path, 'assets/images/unit_logo.jpg')
+    except:
+        pass
+
+
+def find_sensitive_path(dir, insensitive_path):
+    insensitive_path = insensitive_path.strip(os.path.sep)
+
+    parts = insensitive_path.split(os.path.sep)
+    next_name = parts[0]
+    for name in os.listdir(dir):
+        if next_name.lower() == name.lower():
+            improved_path = os.path.join(dir, name)
+            if len(parts) == 1:
+                return improved_path
+            else:
+                return find_sensitive_path(improved_path, os.path.sep.join(parts[1:]))
+    return None
+
+#copy over fluff images
+for fluff_name in fluff_paths:
+    fluff_path = fluff_paths[fluff_name]
+    try:
+        path = find_sensitive_path(mekhq_path, fluff_path.strip('.').replace("\\","/"))
+        copyfile(path, 'assets/images/fluff/' + fluff_name)
     except:
         pass
