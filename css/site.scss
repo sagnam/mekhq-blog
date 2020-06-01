@@ -127,6 +127,8 @@ $navbar-dark-active-color:lighten($secondary,35%);
 .sorttable th a {
 	display: block;
 	width: 100%;
+  padding-right: 18px;
+	position: relative;
 }
 
 .sorttable th a:link,
@@ -136,14 +138,8 @@ $navbar-dark-active-color:lighten($secondary,35%);
 	color: #000;
 	text-decoration: none;
 }
-
-.sorttable th a {
-	padding-right: 18px;
-	position: relative;
-}
-
-.sorttable th a.sort-by:before,
-.sorttable th a.sort-by:after {
+.sorttable th a:before,
+.sorttable th a:after {
 	border: 6px solid transparent;
 	content: "";
 	display: block;
@@ -153,60 +149,24 @@ $navbar-dark-active-color:lighten($secondary,35%);
 	position: absolute;
 	width: 0;
 }
-.sorttable th a.sort-by:before {
+
+.sorttable th a:before {
 	border-bottom-color: #999;
 	margin-top: -13px;
 }
 
-.sorttable th a.sort-by:after {
+.sorttable th a:after {
 	border-top-color: #999;
 	margin-top: 1px;
 }
 
-
-.sorttable th a.sort-down:before,
-.sorttable th a.sort-down:after {
-  border: 6px solid transparent;
-	content: "";
-	display: block;
-	height: 0;
-	right: 2px;
-	top: 50%;
-	position: absolute;
-	width: 0;
-}
 .sorttable th a.sort-down:before {
 	border-bottom-color: #666;
-  margin-top: -13px;
-}
-
-.sorttable th a.sort-down:after {
-	border-top-color: #999;
-	margin-top: 1px;
-}
-
-.sorttable th a.sort-up:before,
-.sorttable th a.sort-up:after {
-  border: 6px solid transparent;
-	content: "";
-	display: block;
-	height: 0;
-	right: 2px;
-	top: 50%;
-	position: absolute;
-	width: 0;
-}
-
-.sorttable th a.sort-up:before {
-	border-bottom-color: #999;
-  margin-top: -13px;
 }
 
 .sorttable th a.sort-up:after {
 	border-top-color: #666;
-	margin-top: 1px;
 }
-
 
 .sorttable tr td:nth-child(n+2), .sorttable tr th:nth-child(n+2) {
   text-align: center;
