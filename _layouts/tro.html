@@ -7,24 +7,24 @@
         <div class="col">
           <div class="container my-2">
             {% if unit.salvage %}
+              <p><strong>Salvage</strong></p>
               <strike>
             {% endif %}
             {% if unit.refit %}
+              <p><strong>Refitting</strong></p>
               <i><u>
             {% endif %}
             <h3><a class="title" href="{{ site.baseurl }}tro/{{ unit.slug }}">{{ unit.name }}</a></h3>
             {% if unit.refit %}
               </u></i>
-              <p>Refitting</p>
             {% endif %}
             {% if unit.salvage %}
               </strike>
-              <p>Salvage</p>
             {% endif %}
             {% assign currentUnit = unit %}
             {% include unit-crew.html %}
             {% if unit.force %}
-              <strong>Unit: </<strong><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
+              <b>Unit: </<b><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
             {% endif %}
             <hr>
           </div>

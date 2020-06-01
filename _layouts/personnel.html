@@ -17,19 +17,19 @@
                 <h4><a href="{{ person.url | relative_url }}">{{ person.title }}</a></h4>
                 {% if person.skill-level %}{{ person.skill-level }} {% endif %}{% if person.phenotype %} {{ person.phenotype }} {% endif%}{{ person.role-name }}{% if person.skill-detail %} ({{ person.skill-detail }}){% endif %}<br>
                 {% if person.callsign %}
-                  <strong>Callsign: </strong>{{person.callsign}}<br>
+                  <b>Callsign: </b>{{person.callsign}}<br>
                 {% endif %}
                 {% if person.unit %}
                   {% assign custom=nil %}
                   {% include find-custom.html custom-slug=person.unit-slug %}
                   {% if custom %}
-                    <strong>Vehicle: </strong><a href="{{ site.baseurl }}tro/{{ custom }}">{{person.unit}}</a><br>
+                    <b>Vehicle: </b><a href="{{ site.baseurl }}tro/{{ custom }}">{{person.unit}}</a><br>
                   {% else %}
-                    <strong>Vehicle: </strong>{{person.unit}}<br>
+                    <b>Vehicle: </b>{{person.unit}}<br>
                   {% endif %}
                 {% endif %}
                 {% if person.force %}
-                  <strong>Unit: </strong><a href="{{ site.baseurl }}forces/{{ person.force-slug }}">{{person.force}}</a><br>
+                  <b>Unit: </b><a href="{{ site.baseurl }}forces/{{ person.force-slug }}">{{person.force}}</a><br>
                 {% endif %}
               </div>
             </div>
