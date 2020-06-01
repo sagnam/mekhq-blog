@@ -1,0 +1,6 @@
+{% if crewList %}
+  <strong>{{ include.title }}: </strong>
+  {% for person in crewList %}
+    <a href="{{ site.baseurl }}personnel/{{ person.slug }}">{{ person.name }}</a>{% if forloop.last %}<br>{% else %},{% endif %}
+  {% endfor %}
+{% endif %}

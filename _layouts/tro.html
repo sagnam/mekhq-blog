@@ -21,12 +21,11 @@
               </strike>
               <p>Salvage</p>
             {% endif %}
-              {% if unit.person %}
-                <strong>Pilot: </<strong><a href="{{ site.baseurl }}personnel/{{ unit.person-slug }}">{{ unit.person }}</a><br>
-              {% endif %}
-              {% if unit.force %}
-                <strong>Unit: </<strong><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
-              {% endif %}
+            {% assign currentUnit = unit %}
+            {% include unit-crew.html %}
+            {% if unit.force %}
+              <strong>Unit: </<strong><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
+            {% endif %}
             <hr>
           </div>
         </div>

@@ -73,12 +73,27 @@ import tarfile
 import time
 import json
 
+unitTypes = { 'Mek' : {'combined' : 'pilot'},
+            'Tank' : {'combined' : 'pilot'},
+            'BattleArmor' : {'combined' : 'men'},
+            'Infantry' : {'combined' : 'men'},
+            'ProtoMek' : {'combined' : 'pilot'},
+            'VTOL' : {'driver' : 'pilot', 'combined' : 'pilot'},
+            'Naval' : {'driver' : 'helmsman', 'combined' : 'crew'},
+            'Gun Emplacement' : {'driver' : 'crew', 'combined' : 'crew'},
+            'Conventional Fighter' : {'driver' : 'pilot', 'combined' : 'pilot'},
+            'Aero' : {'driver' : 'pilot', 'combined' : 'pilot'},
+            'Small Craft' : {'driver' : 'pilot', 'combined' : 'pilot'},
+            'Dropship' : {'driver' : 'pilot', 'combined' : 'crew'},
+            'Jumpship' : {'driver' : 'pilot', 'combined' : 'crew'},
+            'Warship' : {'driver' : 'pilot', 'combined' : 'crew'},
+            'Space Station' : {'driver' : 'pilot', 'combined' : 'crew'}}
 
 # ----------------------------------------------------------------------------
 # custom functions
 # ----------------------------------------------------------------------------
 
-def loadCache():
+def load_cache():
     global mech_paths
     cacheFile = mekhq_path + '/data/mechfiles/units.cache'
     lastModified = time.ctime(os.path.getmtime(cacheFile))
@@ -86,7 +101,7 @@ def loadCache():
     lastModifiedFile = open('unitcache.lastmodified', 'a+')
     lastModifiedFile.seek(0)
     lastLastModified = str(lastModifiedFile.read())
-    
+
     if (lastModified == lastLastModified):
         unitCache = open('unitcache', 'r')
         mech_paths = json.load(unitCache)
@@ -117,7 +132,7 @@ def loadCache():
                 else:
                     zipEntry = ''
 
-                mech_paths[unit] = [file, zipEntry]
+                mech_paths[unit] = [file, zipEntry, cacheEntry.m_sUnitType.value]
 
         json.dump(mech_paths, unitCache)
         lastModifiedFile.write(lastModified)
@@ -207,6 +222,20 @@ def get_person_status(status):
     else:
         return personnel_status_dict[status]
 
+def get_person_name(person):
+    if(person is not None):
+        first = get_xml_text(person.find('givenName'))
+        surname = get_xml_text(person.find('surname'))
+        bloodname = get_xml_text(person.find('bloodname'))
+        pilot_name = get_xml_text(person.find('name'))
+        if(pilot_name == ''):
+            pilot_name = first
+            if(surname != ''):
+                pilot_name = pilot_name + ' ' + surname
+        if(bloodname != ''):
+            pilot_name = pilot_name + ' ' + bloodname
+        return pilot_name
+    return None
 
 #loop through kills and count ones belonging to this uuid
 def count_kills(uuid, kills):
@@ -244,13 +273,19 @@ def find_unit(uuid, units):
         for current_id in unit.findall('vesselCrewId'):
             if(current_id is not None and current_id.text is not None and current_id.text == uuid):
                 return unit.attrib['id']
+        for current_id in unit.findall('navigatorId'):
+            if(current_id is not None and current_id.text is not None and current_id.text == uuid):
+                return unit.attrib['id']
+        for current_id in unit.findall('techOfficerId'):
+            if(current_id is not None and current_id.text is not None and current_id.text == uuid):
+                return unit.attrib['id']
     return None
 
 #loop through personnel and find the one assigned to unit by name
 def find_person(uuid, personnel):
     for person in personnel.findall('person'):
-        current_id = person.find('unitId')
-        if(current_id is not None and current_id.text is not None and current_id.text == uuid):
+        current_id = person.attrib['id']
+        if(current_id is not None and current_id == uuid):
             return person
     return None
 
@@ -516,7 +551,7 @@ def get_skill_report(person):
     return get_skill_desc(sk1, sk2)
 
 
-def processMechFile(f, name, raw_content):
+def process_mech_file(f, name, raw_content):
     content = ['<p>']
     for line in raw_content.split('\n'):
         if (':' in line):
@@ -599,7 +634,7 @@ finances = campaign.find('finances')
 # ----------------------------------------------------------------------------
 # Load unit list from cache (or refresh if source units.cache has changed)
 # ----------------------------------------------------------------------------
-loadCache()
+load_cache()
 
 # ----------------------------------------------------------------------------
 # Process default and custom rank structure and skill types for later use
@@ -751,60 +786,65 @@ for unit in units.findall('unit'):
     if (refit is not None):
         f.write('refit: true\n')
 
-    unit_id = unit.attrib.get('id')
-    if(unit_id is not None):
-        pilot = find_person(unit_id, personnel)
-        if(pilot is not None):
-            first = get_xml_text(pilot.find('givenName'))
-            surname = get_xml_text(pilot.find('surname'))
-            bloodname = get_xml_text(pilot.find('bloodname'))
-            pilot_name = get_xml_text(pilot.find('name'))
-            if(pilot_name == ''):
-                pilot_name = first
-                if(surname != ''):
-                    pilot_name = pilot_name + ' ' + surname
-            if(bloodname != ''):
-                pilot_name = pilot_name + ' ' + bloodname
-            if(pilot_name is not None):
-                f.write('person: ' + pilot_name + '\n')
-                f.write('person-slug: ' + urlify(pilot_name) + '\n')
+    mechInfo = mech_paths[name]
+    if (mechInfo is not None):
+        allPeople = {'pilot':[],'crew':[],'men':[],'helmsman':[]}
+        crewRoles = [['driver','driverId'],['gunner','gunnerId'],['vesselCrew','vesselCrewId'],['navigator','navigatorId'],['techOfficer','techOfficerId']]
+        for crewRole in crewRoles:
+            allPeople[crewRole[0]] = []
+            for person_id in unit.findall(crewRole[1]):
+                if(person_id is not None):
+                    roleOverride = crewRole[0]
+                    if (crewRole[0] in unitTypes[mechInfo[2]]):
+                        roleOverride = unitTypes[mechInfo[2]][crewRole[0]]
+                    allPeople[roleOverride] += [person_id.text]
 
-    force_name = find_force(unit_id, forces, None, None)
-    if(force_name is not None):
-        f.write('force: ' + force_name + '\n')
-        f.write('force-slug: ' + urlify(force_name) + '\n')
+        dupeRole = 'driver'
+        if ('driver' in unitTypes[mechInfo[2]]):
+            dupeRole = unitTypes[mechInfo[2]]['driver']
 
-    content = ['No TRO available']
-    isCustom = False
-    for custom in customs:
-        if(custom.find('name').text == name):
-            isCustom = True
-            mtf = custom.find('mtf').text
-            fix = '<root>{}</root>'.format(mtf)
-            raw_content = ET.fromstring(fix).text
-            content = processMechFile(f, name, raw_content)
-            break
+        for gunner in allPeople['gunner'][:]:
+            if (gunner in allPeople[dupeRole]):
+                if (gunner not in allPeople[unitTypes[mechInfo[2]]['combined']]):
+                    allPeople[unitTypes[mechInfo[2]]['combined']] += [gunner]
+                allPeople['gunner'].remove(gunner)
+                if (gunner in allPeople['driver']):
+                    allPeople['driver'].remove(gunner)
 
-    if (not isCustom):
-        mechInfo = mech_paths[name]
-        if (mechInfo is not None):
-            mechFilePath = mekhq_path + mechInfo[0]
-            if (tarfile.is_tarfile(mechFilePath)):
-                tarFile = tarfile.open(mechFilePath)
-                mechTarFile = tarFile.getmember(mechInfo[1])
-                reader = tarFile.extractfile(mechTarFile)
-                raw_content = reader.read().decode("utf-8")
-                content = processMechFile(f, name, raw_content)
+        for crewRole in allPeople:
+            people = allPeople[crewRole]
+            if (len(people) > 0):
+                f.write(crewRole + 'List:\n')
+                for person_id in people:
+                    person = find_person(person_id, personnel)
+                    person_name = get_person_name(person)
+                    if(person_name is not None):
+                        f.write('- {name: ' + person_name + ', slug: ' + urlify(person_name) + '}\n')
 
-            elif zipfile.is_zipfile(mechFilePath):
-                zipFile = zipfile.ZipFile(mechFilePath)
-                mechZipFile = zipFile.open(mechInfo[1])
-                raw_content = mechZipFile.read().decode("utf-8")
-                content = processMechFile(f, name, raw_content)
-            else:
-                mechFile = open(mechFilePath, 'r')
-                raw_content = mechFile.read()
-                content = processMechFile(f, name, raw_content)
+        unit_id = unit.attrib.get('id')
+        force_name = find_force(unit_id, forces, None, None)
+        if(force_name is not None):
+            f.write('force: ' + force_name + '\n')
+            f.write('force-slug: ' + urlify(force_name) + '\n')
+
+        content = ['No TRO available']
+        mechFilePath = mekhq_path + mechInfo[0]
+        if (tarfile.is_tarfile(mechFilePath)):
+            tarFile = tarfile.open(mechFilePath)
+            mechTarFile = tarFile.getmember(mechInfo[1])
+            reader = tarFile.extractfile(mechTarFile)
+            raw_content = reader.read().decode("utf-8")
+            content = process_mech_file(f, name, raw_content)
+
+        elif zipfile.is_zipfile(mechFilePath):
+            zipFile = zipfile.ZipFile(mechFilePath)
+            mechZipFile = zipFile.open(mechInfo[1])
+            raw_content = mechZipFile.read().decode("utf-8")
+            content = process_mech_file(f, name, raw_content)
+        else:
+            mechFile = open(mechFilePath, 'r')
+            raw_content = mechFile.read()
+            content = process_mech_file(f, name, raw_content)
 
     f.close()
 
