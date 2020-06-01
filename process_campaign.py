@@ -70,34 +70,59 @@ from shutil import copyfile
 import javaobj.v2 as javaobj
 import zipfile
 import tarfile
+import time
+import json
 
-with open(mekhq_path + '/data/mechfiles/units.cache', 'rb') as fd:
-    jobj = fd.read()
-
-pobjs = javaobj.loads(jobj)
-
-for pobj in pobjs[1:]:
-    if (pobj.m_sChassis is not None):
-        unit = pobj.m_sChassis.value
-
-        if (pobj.m_sModel is not None):
-            unit += ' ' + pobj.m_sModel.value
-
-        if (pobj.m_sSourceFile is not None):
-            file = pobj.m_sSourceFile.path.value
-        else:
-            file = ''
-
-        if (pobj.m_sEntryName is not None):
-            zipEntry = pobj.m_sEntryName.value
-        else:
-            zipEntry = ''
-
-        mech_paths[unit] = [file, zipEntry]
 
 # ----------------------------------------------------------------------------
 # custom functions
 # ----------------------------------------------------------------------------
+
+def loadCache():
+    global mech_paths
+    cacheFile = mekhq_path + '/data/mechfiles/units.cache'
+    lastModified = time.ctime(os.path.getmtime(cacheFile))
+
+    lastModifiedFile = open('unitcache.lastmodified', 'a+')
+    lastModifiedFile.seek(0)
+    lastLastModified = str(lastModifiedFile.read())
+    
+    if (lastModified == lastLastModified):
+        unitCache = open('unitcache', 'r')
+        mech_paths = json.load(unitCache)
+    else:
+        unitCache = open('unitcache', 'w+')
+        unitCache.truncate(0)
+        lastModifiedFile.truncate(0)
+
+        with open(cacheFile, 'rb') as fd:
+            javaCacheFile = fd.read()
+
+        javaCache = javaobj.loads(javaCacheFile)
+
+        for cacheEntry in javaCache[1:]:
+            if (cacheEntry.m_sChassis is not None):
+                unit = cacheEntry.m_sChassis.value
+
+                if (cacheEntry.m_sModel is not None):
+                    unit += ' ' + cacheEntry.m_sModel.value
+
+                if (cacheEntry.m_sSourceFile is not None):
+                    file = cacheEntry.m_sSourceFile.path.value
+                else:
+                    file = ''
+
+                if (cacheEntry.m_sEntryName is not None):
+                    zipEntry = cacheEntry.m_sEntryName.value
+                else:
+                    zipEntry = ''
+
+                mech_paths[unit] = [file, zipEntry]
+
+        json.dump(mech_paths, unitCache)
+        lastModifiedFile.write(lastModified)
+    unitCache.close()
+    lastModifiedFile.close()
 
 #clean out punctuation and replace spaces with - for url links and slugs
 def urlify(s):
@@ -490,6 +515,27 @@ def get_skill_report(person):
             sk1 = skills['Administration']
     return get_skill_desc(sk1, sk2)
 
+
+def processMechFile(f, name, raw_content):
+    content = ['<p>']
+    for line in raw_content.split('\n'):
+        if (':' in line):
+            if (line.startswith('imagefile:')):
+                fluff_file = line.split(':')[1]
+                new_fluff_file = replace_fluff_name(fluff_file, urlify(name))
+                fluff_paths[new_fluff_file] = fluff_file
+                f.write('fluff: ' + new_fluff_file + '\n')
+            else:
+                content += ['<b>' + line.replace(':', ':</b> ') + '<br/>\n']
+        else:
+            content += [line  + '<br/>\n']
+    content += ['</p>']
+
+    f.write('---\n')
+    for line in content:
+        f.write(line)
+    return content
+
 # ----------------------------------------------------------------------------
 # Remove old files to start fresh
 # ----------------------------------------------------------------------------
@@ -549,6 +595,11 @@ units = campaign.find('units')
 customs = campaign.findall('custom')
 parts = campaign.find('parts')
 finances = campaign.find('finances')
+
+# ----------------------------------------------------------------------------
+# Load unit list from cache (or refresh if source units.cache has changed)
+# ----------------------------------------------------------------------------
+loadCache()
 
 # ----------------------------------------------------------------------------
 # Process default and custom rank structure and skill types for later use
@@ -679,25 +730,6 @@ for person in personnel.findall('person'):
         f.write(unescape(bio))
         f.close()
 
-def processMechFile(f, name, raw_content):
-    content = ['<p>']
-    for line in raw_content.split('\n'):
-        if (':' in line):
-            if (line.startswith('imagefile:')):
-                fluff_file = line.split(':')[1]
-                new_fluff_file = replace_fluff_name(fluff_file, urlify(name))
-                fluff_paths[new_fluff_file] = fluff_file
-                f.write('fluff: ' + new_fluff_file + '\n')
-            else:
-                content += ['<b>' + line.replace(':', ':</b> ') + '<br/>\n']
-        else:
-            content += [line  + '<br/>\n']
-    content += ['</p>']
-
-    f.write('---\n')
-    for line in content:
-        f.write(line)
-    return content
 
 #loop through units and print out markdown file for each one
 for unit in units.findall('unit'):
