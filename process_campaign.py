@@ -855,12 +855,12 @@ f.write('layout: parts\n')
 f.write('---\n\n')
 f.write('<table class="sorttable">\n')
 f.write('\t<tr>\n')
-f.write('\t\t<th>Name</th>\n')
-f.write('\t\t<th>Type</th>\n')
-f.write('\t\t<th>Quantity</th>\n')
-f.write('\t\t<th>Weight</th>\n')
-f.write('\t\t<th>Detail</th>\n')
-f.write('\t\t<th>Status</th>\n')
+f.write('\t\t<th><a href="#" class="sort-by">Name</a></th>\n')
+f.write('\t\t<th><a href="#" class="sort-by">Type</a></th>\n')
+f.write('\t\t<th><a href="#" class="sort-by">Quantity</a></th>\n')
+f.write('\t\t<th><a href="#" class="sort-by">Weight</a></th>\n')
+f.write('\t\t<th><a href="#" class="sort-by">Detail</a></th>\n')
+f.write('\t\t<th><a href="#" class="sort-by">Status</a></th>\n')
 f.write('\t</tr>\n')
 
 for part in parts.findall('part'):
@@ -989,9 +989,9 @@ for mission in missions.findall('mission'):
 #loop through transations and print out markdown file for all
 content = ['<table class="sorttable">\n']
 content += ['\t<tr>\n']
-content += ['\t\t<th>Description</th>\n']
-content += ['\t\t<th>Amount</th>\n']
-content += ['\t\t<th>Date</th>\n']
+content += ['\t\t<th><a href="#" class="sort-by">Description</a></th>\n']
+content += ['\t\t<th><a href="#" class="sort-by">Amount</a></th>\n']
+content += ['\t\t<th><a href="#" class="sort-by">Date</a></th>\n']
 content += ['\t</tr>\n']
 
 funds = 0
@@ -1007,6 +1007,7 @@ for transation in finances.findall('transaction'):
     content += ['\t\t<td>' + date.text + '</td>\n']
     content += ['\t</tr>\n']
 
+# content += ['\t</tbody>\n']
 content += ['</table>\n']
 
 f = open('campaign/_finances/finances.md', 'w')

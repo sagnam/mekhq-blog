@@ -118,11 +118,56 @@ $navbar-dark-active-color:lighten($secondary,35%);
   border-spacing: 0;
 }
 
+.sorttable th {
+  background-color: #AAA;
+  font-weight: 400;
+  padding-right: 4px;
+}
+
+.sorttable th a {
+	display: block;
+	width: 100%;
+}
+
+.sorttable th a:link,
+.sorttable th a:visited,
+.sorttable th a:hover,
+.sorttable th a:active {
+	color: #000;
+	text-decoration: none;
+}
+
+.sorttable th a.sort-by {
+	padding-right: 18px;
+	position: relative;
+}
+
+.sorttable th a.sort-by:before,
+.sorttable th a.sort-by:after {
+	border: 4px solid transparent;
+	content: "";
+	display: block;
+	height: 0;
+	right: 5px;
+	top: 50%;
+	position: absolute;
+	width: 0;
+}
+.sorttable th a.sort-by:before {
+	border-bottom-color: #666;
+	margin-top: -9px;
+}
+
+.sorttable th a.sort-by:after {
+	border-top-color: #666;
+	margin-top: 1px;
+}
+
 .sorttable tr td:nth-child(n+2), .sorttable tr th:nth-child(n+2) {
   text-align: center;
   white-space:nowrap;
 }
 
-.sorttable tr:nth-child(even) {
-  background-color: #f2f2f2
+.sorttable tr:nth-child(odd) {
+  background-color: #d8d8d8
 }
