@@ -6,6 +6,12 @@ permalink: /index.html
 
 {% if site.logo %}
   <img src="{{ site.baseurl }}{{ site.logo }}" class="float-left w-25 mr-2 mb-2">
+{% else %}
+  {% for image in site.static_files %}
+      {% if image.path contains 'images/force' and image.path != site.logo %}
+          <img src="{{ site.baseurl }}{{ image.path }}" alt="image" class="float-left w-25 mr-2 mb-2" />
+      {% endif %}
+  {% endfor %}
 {% endif %}
 
  {% if site.toe_front_page %}

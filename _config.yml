@@ -20,7 +20,7 @@ description: >- # this means to ignore newlines until "baseurl:"
 baseurl: "/~sagnam/battletech/" # the subpath of your site, e.g. /blog
 url: "http://www.izzy.net" # the base hostname & protocol for your site, e.g. http://example.com
 banner_image: false
-logo: /assets/images/unit_logo.jpg
+# logo: /assets/images/unit_logo.jpg
 
 # By default, the description in the top-level force will be placed on the home
 # page rather than the TO&E page. Switch to false to turn this behavior off.
