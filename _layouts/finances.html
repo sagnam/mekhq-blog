@@ -4,6 +4,20 @@
       {% if page.funds %}
         <h3><strong>Funds: </strong>{{ page.funds }}</h3><br>
       {% endif %}
+      <table class="sorttable">
+        <tr>
+          {% for header in page.headers %}
+            <th><a href="#" class="sort-by">{{header}}</a></th>
+          {% endfor %}
+        </tr>
+        {% for transaction in page.transactions %}
+          <tr>
+            {% for value in transaction.transaction %}
+              <td>{{value}}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
       {{content}}
     </div>
   </main>

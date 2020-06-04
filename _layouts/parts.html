@@ -1,6 +1,21 @@
 {% include header.html %}
   <main role="main">
     <div class="container top bg-light mt-3">
+      <table class="sorttable">
+        <tr>
+          {% for header in page.headers %}
+            <th><a href="#" class="sort-by">{{header}}</a></th>
+          {% endfor %}
+        </tr>
+        {% for part in page.parts %}
+          <tr>
+            {% for value in part.part %}
+              <td>{{value}}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
+
       {{content}}
     </div>
   </main>

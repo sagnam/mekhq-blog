@@ -867,16 +867,14 @@ for unit in units.findall('unit'):
 f = open('campaign/_parts/parts.md', 'w')
 f.write('---\n')
 f.write('layout: parts\n')
-f.write('---\n\n')
-f.write('<table class="sorttable">\n')
-f.write('\t<tr>\n')
-f.write('\t\t<th><a href="#" class="sort-by">Name</a></th>\n')
-f.write('\t\t<th><a href="#" class="sort-by">Type</a></th>\n')
-f.write('\t\t<th><a href="#" class="sort-by">Quantity</a></th>\n')
-f.write('\t\t<th><a href="#" class="sort-by">Weight</a></th>\n')
-f.write('\t\t<th><a href="#" class="sort-by">Detail</a></th>\n')
-f.write('\t\t<th><a href="#" class="sort-by">Status</a></th>\n')
-f.write('\t</tr>\n')
+f.write('headers:\n')
+f.write('- Name\n')
+f.write('- Type\n')
+f.write('- Quantity\n')
+f.write('- Weight\n')
+f.write('- Detail\n')
+f.write('- Status\n')
+f.write('parts:\n')
 
 for part in parts.findall('part'):
     type = part.attrib.get('type')
@@ -895,29 +893,31 @@ for part in parts.findall('part'):
     # for some reason there is a bunch of battle armor armor in the campaign
     # file but not in the warehouse
     if(unitId is None and name is not None and type != 'mekhq.campaign.parts.BaArmor'):
-        f.write('\t<tr>\n')
-        f.write('\t\t<td>' + name.text + '</td>\n')
+        f.write('- part:\n')
 
+        f.write('  - ' + name.text + '\n')
+
+        # f.write('  values:\n')
         if ((clan is not None) and (clan.text == 'true')) or ((typeName is not None) and (typeName.text.startswith('CL'))):
-            f.write('\t\t<td>Clan</td>\n')
+            f.write('  - Clan\n')
         else:
-            f.write('\t\t<td>IS</td>\n')
+            f.write('  - IS\n')
 
         if (amount is not None):
-            f.write('\t\t<td>' + amount.text + '</td>\n')
+            f.write('  - ' + amount.text + '\n')
         elif (munition is not None and shots is not None):
-            f.write('\t\t<td>' + shots.text + '</td>\n')
+            f.write('  - ' + shots.text + '\n')
         else:
-            f.write('\t\t<td>1</td>\n')
+            f.write('  - 1\n')
 
         if (weight is not None):
-            f.write('\t\t<td>' + str(round(float(weight.text),1)) + '</td>\n')
+            f.write('  - ' + str(round(float(weight.text),1)) + '\n')
         elif (munition is not None and forWeight is not None and
                 (type != 'mekhq.campaign.parts.equipment.AmmoBin')):
-            f.write('\t\t<td>' + forWeight.text + '</td>\n')
+            f.write('  - ' + forWeight.text + '\n')
             forWeight = None
         else:
-            f.write('\t\t<td></td>\n')
+            f.write('  - ~\n')
 
         if (((type == 'mekhq.campaign.parts.MekLocation') or
             (type == 'mekhq.campaign.parts.equipment.JumpJet') or
@@ -925,21 +925,18 @@ for part in parts.findall('part'):
             (type == 'mekhq.campaign.parts.MekActuator') or
             (type == 'mekhq.campaign.parts.EnginePart')) and
             (forWeight is not None)):
-            f.write('\t\t<td>' + forWeight.text + ' tons</td>\n')
+            f.write('  - ' + forWeight.text + ' tons\n')
         else:
-            f.write('\t\t<td></td>\n')
+            f.write('  - ~\n')
 
         if (reserved is not None and reserved.text != 'null'):
-            f.write('\t\t<td>reserved</td>\n')
+            f.write('  - reserved\n')
         elif (damaged is not None and damaged.text != '0'):
-            f.write('\t\t<td>damaged</td>\n')
+            f.write('  - damaged\n')
         else:
-            f.write('\t\t<td></td>\n')
+            f.write('  - ~\n')
 
-
-        f.write('\t</tr>\n')
-
-f.write('</table>\n')
+f.write('---\n\n')
 f.close()
 
 
@@ -1002,12 +999,14 @@ for mission in missions.findall('mission'):
             f.close()
 
 #loop through transations and print out markdown file for all
-content = ['<table class="sorttable">\n']
-content += ['\t<tr>\n']
-content += ['\t\t<th><a href="#" class="sort-by">Description</a></th>\n']
-content += ['\t\t<th><a href="#" class="sort-by">Amount</a></th>\n']
-content += ['\t\t<th><a href="#" class="sort-by">Date</a></th>\n']
-content += ['\t</tr>\n']
+f = open('campaign/_finances/finances.md', 'w')
+f.write('---\n')
+f.write('layout: finances\n')
+f.write('headers:\n')
+f.write('- Description\n')
+f.write('- Amount\n')
+f.write('- Date\n')
+f.write('transactions:\n')
 
 funds = 0
 for transation in finances.findall('transaction'):
@@ -1016,23 +1015,14 @@ for transation in finances.findall('transaction'):
     date = transation.find('date')
     amount = int(amountStr.text.split()[0])
     funds += amount
-    content += ['\t<tr>\n']
-    content += ['\t\t<td>' + description.text + '</td>\n']
-    content += ['\t\t<td>' + f'{amount:,}' + '</td>\n']
-    content += ['\t\t<td>' + date.text + '</td>\n']
-    content += ['\t</tr>\n']
+    f.write('- transaction:\n')
 
-# content += ['\t</tbody>\n']
-content += ['</table>\n']
+    f.write('  - ' + description.text + '\n')
+    f.write('  - ' + f'{amount:,}' + '\n')
+    f.write('  - ' + date.text + '\n')
 
-f = open('campaign/_finances/finances.md', 'w')
-
-f.write('---\n')
-f.write('layout: finances\n')
 f.write('funds: ' + f'{funds:,}' + ' CBills\n')
 f.write('---\n\n')
-for line in content:
-    f.write(line)
 f.close()
 
 
