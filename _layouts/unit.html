@@ -7,6 +7,13 @@
       {% if page.force %}
         <strong>Unit: </strong><a href="{{ site.baseurl }}forces/{{ page.force-slug }}">{{ page.force }}</a><br>
       {% endif %}
+
+      {% if page.cost %}
+        <strong>Cost: </strong>{{ page.cost }}<br>
+      {% endif %}
+      {% if page.bv %}
+        <strong>BV: </strong>{{ page.bv }}<br>
+      {% endif %}
       <br>
       {{content}}
   </main>

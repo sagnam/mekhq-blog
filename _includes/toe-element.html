@@ -42,7 +42,8 @@
                 {% assign custom=nil %}
                 {% include find-custom.html custom-slug=person.unit-slug %}
                 {% if custom %}
-                  <a href="{{ person.url | relative_url }}">{{person.title}}</a>, <a href="{{ site.baseurl }}tro/{{ custom }}">{{person.unit}}</a>
+                  <a href="{{ person.url | relative_url }}">{{person.title}}</a>, <a href="{{ site.baseurl }}tro/{{ custom }}">{{person.unit}}</a><br>
+                  <strong>BV: </strong>{{bv}}
                 {% else %}
                   <a href="{{ person.url | relative_url }}">{{person.title}}</a>, {{person.unit}}
                 {% endif %}

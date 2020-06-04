@@ -102,7 +102,7 @@ def load_cache():
     lastModifiedFile.seek(0)
     lastLastModified = str(lastModifiedFile.read())
 
-    if (lastModified == lastLastModified):
+    if (lastModified == lastLastModified and os.path.exists('unitcache')):
         unitCache = open('unitcache', 'r')
         mech_paths = json.load(unitCache)
     else:
@@ -122,6 +122,15 @@ def load_cache():
                 if (cacheEntry.m_sModel is not None):
                     unit += ' ' + cacheEntry.m_sModel.value
 
+#                 print('\nunit: ' + unit +
+#                     ' \n\tgmBV: ' + str(cacheEntry.m_gmBV) +
+#                     '\n\trhBV: ' + str(cacheEntry.m_rhBV) +
+#                     '\n\trhgmBV: ' + str(cacheEntry.m_rhgmBV) +
+# Could store cost as well!                    '\n\tCost: ' + str(cacheEntry.m_nCost) +
+#                     '\n\taCost: ' + str(cacheEntry.m_aCost) +
+#                     '\n\tm_lModified: ' + str(cacheEntry.m_lModified))
+
+
                 if (cacheEntry.m_sSourceFile is not None):
                     file = cacheEntry.m_sSourceFile.path.value
                 else:
@@ -132,7 +141,7 @@ def load_cache():
                 else:
                     zipEntry = ''
 
-                mech_paths[unit] = [file, zipEntry, cacheEntry.m_sUnitType.value]
+                mech_paths[unit] = [file, zipEntry, cacheEntry.m_sUnitType.value, cacheEntry.m_nCost, cacheEntry.m_nBV]
 
         json.dump(mech_paths, unitCache)
         lastModifiedFile.write(lastModified)
@@ -826,6 +835,12 @@ for unit in units.findall('unit'):
         if(force_name is not None):
             f.write('force: ' + force_name + '\n')
             f.write('force-slug: ' + urlify(force_name) + '\n')
+
+        if(mechInfo[3] is not None):
+            f.write('cost: ' + f'{mechInfo[3]:,}' + ' CBills\n')
+
+        if(mechInfo[4] is not None):
+            f.write('bv: ' + f'{mechInfo[4]:,}' + '\n')
 
         content = ['No TRO available']
         mechFilePath = mekhq_path + mechInfo[0]

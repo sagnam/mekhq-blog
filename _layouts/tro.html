@@ -26,6 +26,12 @@
             {% if unit.force %}
               <b>Unit: </<b><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
             {% endif %}
+            {% if unit.cost %}
+              <strong>Cost: </strong>{{ unit.cost }}<br>
+            {% endif %}
+            {% if unit.bv %}
+              <strong>BV: </strong>{{ unit.bv }}<br>
+            {% endif %}
             <hr>
           </div>
         </div>
