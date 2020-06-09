@@ -55,6 +55,8 @@ mech_paths = {
 fluff_paths = {
 }
 
+rpg_gunnery = False
+
 # ----------------------------------------------------------------------------
 # imports
 # ----------------------------------------------------------------------------
@@ -148,6 +150,13 @@ def load_cache():
     unitCache.close()
     lastModifiedFile.close()
 
+def read_options():
+    gameOptions = campaign.find('gameOptions')
+    for option in gameOptions.findall('gameoption'):
+        if (option.find('name') is not None and option.find('value') is not None and option.find('name') == 'rpg_gunnery'):
+            rpg_gunnery = option.value.text == 'true'
+
+
 #clean out punctuation and replace spaces with - for url links and slugs
 def urlify(s):
     # strip leading and trailing whitespace
@@ -161,6 +170,9 @@ def urlify(s):
     if(s[0].isdigit()):
         s = "n" + s
     return s.lower()
+
+def numberify(n):
+    return '"' + f'{n:,}' + '"'
 
 #takes an xml element and returns either the text of element if it exists
 #or an empty string otherwise
@@ -461,103 +473,203 @@ class Skill:
         self.level = level
         self.bonus = bonus
 
-def get_skill_desc(sk1, sk2):
-    if(sk1 is None):
+def get_skill_desc(skills):
+    if(skills is None or len(skills) == 0):
         return None
-    lvl = skill_dict[sk1.name].get_skill_level(sk1.level)
-    tgt_desc = skill_dict[sk1.name].get_target_desc(sk1)
-    if(sk2 is not None):
-        lvl2 = skill_dict[sk2.name].get_skill_level(sk2.level)
-        lvl = int((lvl+lvl2)/2)
-        tgt_desc = tgt_desc + "/" + skill_dict[sk2.name].get_target_desc(sk2)
-        tgt_desc = re.sub(r"\+", '', tgt_desc)
+
+    for idx, skill in enumerate(skills):
+        if (skill is None):
+            break
+
+        if (idx == 0):
+            lvlSum = skill_dict[skill.name].get_skill_level(skill.level)
+            tgt_desc = skill_dict[skill.name].get_target_desc(skill)
+        else:
+            lvlSum += skill_dict[skill.name].get_skill_level(skill.level)
+            tgt_desc = tgt_desc + "/" + skill_dict[skill.name].get_target_desc(skill)
+
+    lvl = int(lvlSum/len(skills))
+    tgt_desc = re.sub(r"\+", '', tgt_desc)
     return [skill_level_names[lvl], tgt_desc]
 
 def get_skill_report(person):
     role = int(person.find('primaryRole').text)
+    if ((role == 1 and int(person.find('primaryRole').text) == 2) or
+        (role == 2 and int(person.find('primaryRole').text == 1))):
+        role = 26 # Not a separate type, but an alias for MW + Aero pilot
+
     skills = {}
     for skill in person.findall('skill'):
         sk_name = get_xml_text(skill.find('type'))
         sk_lvl = int(get_xml_text(skill.find('level')))
         sk_bns = int(get_xml_text(skill.find('bonus')))
         skills[sk_name] = Skill(sk_name, sk_lvl, sk_bns)
-    sk1 = None
-    sk2 = None
+    roleSkills = []
     if(role == 1): #mechwarrior
-        if('Gunnery/Mech' in skills):
-            sk1 = skills['Gunnery/Mech']
+        if (rpg_gunnery):
+            if('Gunnery/Mech' in skills):
+                roleSkills.append(skills['Gunnery/Mech'])
+        else:
+            if('Gunnery/Mech/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Mech/Laser'])
+            if('Gunnery/Mech/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Mech/Missile'])
+            if('Gunnery/Mech/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Mech/Ballistic'])
         if('Piloting/Mech' in skills):
-            sk2 = skills['Piloting/Mech']
+            roleSkills.append(skills['Piloting/Mech'])
     elif(role == 2): #ASF pilot
-        if('Gunnery/Aerospace' in skills):
-            sk1 = skills['Gunnery/Aerospace']
+        if (rpg_gunnery):
+            if('Gunnery/Aerospace' in skills):
+                roleSkills.append(skills['Gunnery/Aerospace'])
+        else:
+            if('Gunnery/Aerospace/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Aerospace/Laser'])
+            if('Gunnery/Aerospace/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Aerospace/Missile'])
+            if('Gunnery/Aerospace/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Aerospace/Ballistic'])
         if('Piloting/Aerospace' in skills):
-            sk2 = skills['Piloting/Aerospace']
+            roleSkills.append(skills['Piloting/Aerospace'])
     elif(role == 3): #vee driver
         if('Piloting/Ground Vehicle' in skills):
-            sk1 = skills['Piloting/Ground Vehicle']
+            roleSkills.append(skills['Piloting/Ground Vehicle'])
     elif(role == 4): #bluewater naval driver
         if('Piloting/Naval' in skills):
-            sk1 = skills['Piloting/Naval']
+            roleSkills.append(skills['Piloting/Naval'])
     elif(role == 5): #VTOL pilot
         if('Piloting/VTOL' in skills):
-            sk1 = skills['Piloting/VTOL']
+            roleSkills.append(skills['Piloting/VTOL'])
     elif(role == 6): #Vee gunner
-        if('Gunnery/Vehicle' in skills):
-            sk1 = skills['Gunnery/Vehicle']
+        if (rpg_gunnery):
+            if('Gunnery/Vehicle' in skills):
+                roleSkills.append(skills['Gunnery/Vehicle'])
+        else:
+            if('Gunnery/Vehicle/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Vehicle/Laser'])
+            if('Gunnery/Vehicle/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Vehicle/Missile'])
+            if('Gunnery/Vehicle/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Vehicle/Ballistic'])
     elif(role == 7): #BA pilot
-        if('Gunnery/Battlesuit' in skills):
-            sk1 = skills['Gunnery/Battlesuit']
+        if (rpg_gunnery):
+            if('Gunnery/Battlesuit' in skills):
+                roleSkills.append(skills['Gunnery/Battlesuit'])
+        else:
+            if('Gunnery/Battlesuit/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Battlesuit/Laser'])
+            if('Gunnery/Battlesuit/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Battlesuit/Missile'])
+            if('Gunnery/Battlesuit/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Battlesuit/Ballistic'])
         if('Anti-Mech' in skills):
-            sk2 = skills['Anti-Mech']
+            roleSkills.append(skills['Anti-Mech'])
     elif(role == 8): #Conventional Infantry
-        if('Small Arms' in skills):
-            sk1 = skills['Small Arms']
+        if (rpg_gunnery):
+            if('Small Arms' in skills):
+                roleSkills.append(skills['Small Arms'])
+        else:
+            if('Small Arms/Laser' in skills):
+                roleSkills.append(skills['Small Arms/Laser'])
+            if('Small Arms/Missile' in skills):
+                roleSkills.append(skills['Small Arms/Missile'])
+            if('Small Arms/Ballistic' in skills):
+                roleSkills.append(skills['Small Arms/Ballistic'])
     elif(role == 9): #Protomech Pilot
-        if('Gunnery/Protomech' in skills):
-            sk1 = skills['Gunnery/Protomech']
+        if (rpg_gunnery):
+            if('Gunnery/Protomech' in skills):
+                roleSkills.append(skills['Gunnery/Protomech'])
+        else:
+            if('Gunnery/Protomech/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Protomech/Laser'])
+            if('Gunnery/Protomech/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Protomech/Missile'])
+            if('Gunnery/Protomech/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Protomech/Ballistic'])
     elif(role == 10): #Conv Fighter Pilot
-        if('Gunnery/Aircraft' in skills):
-            sk1 = skills['Gunnery/Aircraft']
+        if (rpg_gunnery):
+            if('Gunnery/Aircraft' in skills):
+                roleSkills.append(skills['Gunnery/Aircraft'])
+        else:
+            if('Gunnery/Aircraft/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Aircraft/Laser'])
+            if('Gunnery/Aircraft/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Aircraft/Missile'])
+            if('Gunnery/Aircraft/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Aircraft/Ballistic'])
         if('Piloting/Jet' in skills):
-            sk2 = skills['Piloting/Jet']
+            roleSkills.append(skills['Piloting/Jet'])
     elif(role == 11): #Space pilot
         if('Piloting/Aircraft' in skills):
-            sk1 = skills['Piloting/Spacecraft']
+            roleSkills.append(skills['Piloting/Spacecraft'])
     elif(role == 12): #space crew
         if('Tech/Vessel' in skills):
-            sk1 = skills['Tech/Vessel']
+            roleSkills.append(skills['Tech/Vessel'])
     elif(role == 13): #space gunners
-        if('Gunnery/Spacecraft' in skills):
-            sk1 = skills['Gunnery/Spacecraft']
+        if (rpg_gunnery):
+            if('Gunnery/Spacecraft' in skills):
+                roleSkills.append(skills['Gunnery/Spacecraft'])
+        else:
+            if('Gunnery/Spacecraft/Laser' in skills):
+                roleSkills.append(skills['Gunnery/Spacecraft/Laser'])
+            if('Gunnery/Spacecraft/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Spacecraft/Missile'])
+            if('Gunnery/Spacecraft/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Spacecraft/Ballistic'])
     elif(role == 14): #Navigator
         if('Hyperspace Navigator' in skills):
-            sk1 = skills['Hyperspace Navigation']
+            roleSkills.append(skills['Hyperspace Navigation'])
     elif(role == 15): #Mech Tech
         if('Tech/Mech' in skills):
-            sk1 = skills['Tech/Mech']
+            roleSkills.append(skills['Tech/Mech'])
     elif(role == 16): #Mechanic Tech
         if('Tech/Mechanic' in skills):
-            sk1 = skills['Tech/Mechanic']
+            roleSkills.append(skills['Tech/Mechanic'])
     elif(role == 17): #Aero Tech
         if('Tech/Aero' in skills):
-            sk1 = skills['Tech/Aero']
+            roleSkills.append(skills['Tech/Aero'])
     elif(role == 18): #BA Tech
         if('Tech/BA' in skills):
-            sk1 = skills['Tech/BA']
+            roleSkills.append(skills['Tech/BA'])
     elif(role == 19): #Astech
         if('Astech' in skills):
-            sk1 = skills['Astech']
+            roleSkills.append(skills['Astech'])
     elif(role == 20): #Doctor
         if('Doctor' in skills):
-            sk1 = skills['Doctor']
+            roleSkills.append(skills['Doctor'])
     elif(role == 21): #Medic
         if('Medtech' in skills):
-            sk1 = skills['Medtech']
+            roleSkills.append(skills['Medtech'])
     elif(role >= 22 and role <=25): #Admin
         if('Administration' in skills):
-            sk1 = skills['Administration']
-    return get_skill_desc(sk1, sk2)
+            roleSkills.append(skills['Administration'])
+    elif(role == 26): #LAM pilot, alias
+        if (rpg_gunnery):
+            if('Gunnery/Mech' in skills):
+                roleSkills.append('M: ' + skills['Gunnery/Mech'])
+        else:
+            if('Gunnery/Mech/Laser' in skills):
+                roleSkills.append('M: ' + skills['Gunnery/Mech/Laser'])
+            if('Gunnery/Mech/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Mech/Missile'])
+            if('Gunnery/Mech/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Mech/Ballistic'])
+        if('Piloting/Mech' in skills):
+            roleSkills.append(skills['Piloting/Mech'])
+
+        if (rpg_gunnery):
+            if('Gunnery/Aerospace' in skills):
+                roleSkills.append('A: ' + skills['Gunnery/Aerospace'])
+        else:
+            if('Gunnery/Aerospace/Laser' in skills):
+                roleSkills.append('A: ' + skills['Gunnery/Aerospace/Laser'])
+            if('Gunnery/Aerospace/Missile' in skills):
+                roleSkills.append(skills['Gunnery/Aerospace/Missile'])
+            if('Gunnery/Aerospace/Ballistic' in skills):
+                roleSkills.append(skills['Gunnery/Aerospace/Ballistic'])
+        if('Piloting/Aerospace' in skills):
+            roleSkills.append(skills['Piloting/Aerospace'])
+    return get_skill_desc(roleSkills)
 
 
 def process_mech_file(f, name, raw_content):
@@ -644,6 +756,7 @@ finances = campaign.find('finances')
 # Load unit list from cache (or refresh if source units.cache has changed)
 # ----------------------------------------------------------------------------
 load_cache()
+read_options()
 
 # ----------------------------------------------------------------------------
 # Process default and custom rank structure and skill types for later use
@@ -840,7 +953,7 @@ for unit in units.findall('unit'):
             f.write('cost: ' + f'{mechInfo[3]:,}' + ' CBills\n')
 
         if(mechInfo[4] is not None):
-            f.write('bv: ' + f'{mechInfo[4]:,}' + '\n')
+            f.write('bv: ' + numberify(mechInfo[4]) + '\n')
 
         content = ['No TRO available']
         mechFilePath = mekhq_path + mechInfo[0]
@@ -1018,7 +1131,7 @@ for transation in finances.findall('transaction'):
     f.write('- transaction:\n')
 
     f.write('  - ' + description.text + '\n')
-    f.write('  - ' + f'{amount:,}' + '\n')
+    f.write('  - ' + numberify(amount) + '\n')
     f.write('  - ' + date.text + '\n')
 
 f.write('funds: ' + f'{funds:,}' + ' CBills\n')
