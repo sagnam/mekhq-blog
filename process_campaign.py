@@ -692,6 +692,94 @@ def process_mech_file(f, name, raw_content):
         f.write(line)
     return content
 
+
+def write_force_assigned(f, forces, level):
+    f.write((' ' * level * 2) + 'forces: \n')
+    level += 1
+    for force in forces:
+        if (force is not None):
+            name = get_xml_text(force.find('name'))
+            # f.write((' ' * level * 2) + '- force: ' + name + '\n')
+            f.write((' ' * level * 2) + '- force-name: ' + name + '\n')
+            f.write((' ' * level * 2) + '  force-slug: ' + urlify(name) + '\n')
+
+            units = force.find('units')
+            if (units is not None):
+                write_units_assigned(f, units.findall('unitStub'), level + 1)
+            subForces = force.find('subforces')
+            if (subForces is not None):
+                write_force_assigned(f, subForces.findall('forceStub'), level)
+
+def write_units_assigned(f, units, level):
+    prefix = ''
+    if (level == 1):
+        prefix = '- '
+
+    f.write((' ' * level * 2) + prefix + 'units: \n')
+    level += 1
+    for unit in units:
+        if (unit is not None):
+            desc = get_xml_text(unit.find('desc'))
+            desc = unescape(desc)
+            desc = clean_html(desc)
+            unitInfo = [x.strip() for x in desc.split(',')]
+
+            if (len(unitInfo) > 0):
+                memberName = unitInfo[0].rsplit(' ', 1)[0]
+                f.write((' ' * level * 2) + '- person: ' + memberName + '\n')
+                f.write((' ' * level * 2) + '  person-slug: ' + urlify(memberName) + '\n')
+            if (len(unitInfo) > 1):
+                unitName = unitInfo[1]
+                f.write((' ' * level * 2) + '  unit-name: ' + unitName + '\n')
+                f.write((' ' * level * 2) + '  unit-slug: ' + urlify(unitName) + '\n')
+
+                if (not os.path.exists('campaign/_tro/' + urlify(unitName) + '.md')):
+                    uf = open('campaign/_tro/' + urlify(unitName) + '.md', 'w')
+                    uf.write('---\n')
+                    uf.write('layout: unit\n')
+                    uf.write('name: ' + unitName + '\n')
+                    uf.write('slug: ' + urlify(unitName) + '\n')
+                    uf.write('removed: true\n')
+
+                    if (refit is not None):
+                        uf.write('refit: true\n')
+
+                    mechInfo = mech_paths[unitName]
+                    if (mechInfo is not None):
+
+                        if(mechInfo[3] is not None):
+                            uf.write('cost: ' + f'{mechInfo[3]:,}' + ' CBills\n')
+
+                        if(mechInfo[4] is not None):
+                            uf.write('bv: ' + numberify(mechInfo[4]) + '\n')
+
+                        content = ['No TRO available']
+                        mechFilePath = mekhq_path + mechInfo[0]
+                        if (tarfile.is_tarfile(mechFilePath)):
+                            tarFile = tarfile.open(mechFilePath)
+                            mechTarFile = tarFile.getmember(mechInfo[1])
+                            reader = tarFile.extractfile(mechTarFile)
+                            raw_content = reader.read().decode("utf-8")
+                            content = process_mech_file(uf, name, raw_content)
+
+                        elif zipfile.is_zipfile(mechFilePath):
+                            zipFile = zipfile.ZipFile(mechFilePath)
+                            mechZipFile = zipFile.open(mechInfo[1])
+                            raw_content = mechZipFile.read().decode("utf-8")
+                            content = process_mech_file(uf, name, raw_content)
+                        else:
+                            mechFile = open(mechFilePath, 'r')
+                            raw_content = mechFile.read()
+                            content = process_mech_file(uf, name, raw_content)
+
+                    uf.close()
+
+def clean_html(raw_html):
+  cleanr = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+  cleantext = re.sub(cleanr, '', raw_html)
+  return cleantext
+
+
 # ----------------------------------------------------------------------------
 # Remove old files to start fresh
 # ----------------------------------------------------------------------------
@@ -1052,7 +1140,6 @@ for part in parts.findall('part'):
 f.write('---\n\n')
 f.close()
 
-
 #loop through missions and scenarios. Use slugs to link scenarios
 #to mission, but actually linking will be done by liquid
 for mission in missions.findall('mission'):
@@ -1104,6 +1191,12 @@ for mission in missions.findall('mission'):
                 f.write('status: ' + scenario_status_names[int(scenario_status)] + '\n')
             f.write('mission: ' + mission_name + '\n')
             f.write('mission-slug: ' + urlify(mission_name) + '\n')
+            if (scenario.find('forceStub') is not None):
+                if (scenario.find('forceStub').find('subforces') is not None):
+                    write_force_assigned(f, scenario.find('forceStub').find('subforces').findall('forceStub'), 0)
+                elif (scenario.find('forceStub').find('units') is not None):
+                    f.write('forces:\n')
+                    write_units_assigned(f, scenario.find('forceStub').find('units').findall('unitStub'), 1)
             f.write('---\n\n')
             f.write(scenario_desc + '\n')
             if(scenario_aar is not ''):

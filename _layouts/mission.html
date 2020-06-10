@@ -53,7 +53,14 @@
             {% if scenario.status %}
               <b>Status:</b> {{scenario.status}}<br>
             {% endif %}
-            <p></p>
+
+            {% if scenario.forces %}
+              <br>
+              <h5>Forces Deloyed</h5>
+              {% assign forceList = scenario.forces %}
+              {% include scenario-force.html %}
+            {% endif %}
+            <br>
             {{ scenario.content | markdownify }}
           </div>
         </div>

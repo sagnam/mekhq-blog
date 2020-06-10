@@ -1,0 +1,24 @@
+{% if forceList and forceList.size > 0 %}
+  <ul>
+    {% for force in forceList %}
+      {% if force.force-name %}
+        {% if force.force-slug %}
+          <li><a href="{{ site.baseurl }}forces/{{ force.force-slug }}" style="color:white">{{ force.force-name }}</a></li>
+        {% else %}
+        <li><p style="color:white">{{ force.force-name }}</p></li>
+        {% endif %}
+      {% endif %}
+
+      {% if force.units and force.units.size > 0 %}
+        <ul>
+          {% for unit in force.units %}
+            <li><a href="{{ site.baseurl }}personnel/{{ unit.person-slug }}" style="color:white">{{ unit.person }}</a>, <a href="{{ site.baseurl }}tro/{{ unit.unit-slug }}" style="color:white">{{ unit.unit-name }}</a></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% assign forceList = force.forces %}
+      {% include scenario-force.html %}
+    {% endfor %}
+  </ul>
+{% endif %}

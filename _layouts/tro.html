@@ -3,39 +3,41 @@
     <div class="container top bg-light mt-3">
       {{content}}
       {% for unit in site.tro %}
-      <div class="row">
-        <div class="col">
-          <div class="container my-2">
-            {% if unit.salvage %}
-              <p><strong>Salvage</strong></p>
-              <strike>
-            {% endif %}
-            {% if unit.refit %}
-              <p><strong>Refitting</strong></p>
-              <i><u>
-            {% endif %}
-            <h3><a class="title" href="{{ site.baseurl }}tro/{{ unit.slug }}">{{ unit.name }}</a></h3>
-            {% if unit.refit %}
-              </u></i>
-            {% endif %}
-            {% if unit.salvage %}
-              </strike>
-            {% endif %}
-            {% assign currentUnit = unit %}
-            {% include unit-crew.html %}
-            {% if unit.force %}
-              <b>Unit: </<b><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
-            {% endif %}
-            {% if unit.cost %}
-              <strong>Cost: </strong>{{ unit.cost }}<br>
-            {% endif %}
-            {% if unit.bv %}
-              <strong>BV: </strong>{{ unit.bv }}<br>
-            {% endif %}
-            <hr>
+        {% unless unit.removed %}
+          <div class="row">
+            <div class="col">
+              <div class="container my-2">
+                {% if unit.salvage %}
+                  <p><strong>Salvage</strong></p>
+                  <strike>
+                {% endif %}
+                {% if unit.refit %}
+                  <p><strong>Refitting</strong></p>
+                  <i><u>
+                {% endif %}
+                <h3><a class="title" href="{{ site.baseurl }}tro/{{ unit.slug }}">{{ unit.name }}</a></h3>
+                {% if unit.refit %}
+                  </u></i>
+                {% endif %}
+                {% if unit.salvage %}
+                  </strike>
+                {% endif %}
+                {% assign currentUnit = unit %}
+                {% include unit-crew.html %}
+                {% if unit.force %}
+                  <b>Unit: </<b><a href="{{ site.baseurl }}forces/{{ unit.force-slug }}">{{ unit.force }}</a><br>
+                {% endif %}
+                {% if unit.cost %}
+                  <strong>Cost: </strong>{{ unit.cost }}<br>
+                {% endif %}
+                {% if unit.bv %}
+                  <strong>BV: </strong>{{ unit.bv }}<br>
+                {% endif %}
+                <hr>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        {% endunless %}
       {% endfor %}
   </main>
 {% include footer.html %}
